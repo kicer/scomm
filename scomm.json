@@ -105,6 +105,20 @@
             "sticky": "w",
             "column": 4,
             "row": 4
+        },
+        {
+            "name":"ckbtn-split",
+            "text":"分帧间隔",
+            "sticky": "w",
+            "column": 5,
+            "row": 3
+        },
+        {
+            "name":"ckbtn-cycle",
+            "text":"循环发送",
+            "sticky": "w",
+            "column": 5,
+            "row": 4
         }
     ],
     "Entry": [
@@ -122,6 +136,20 @@
             "width":10,
             "column": 4,
             "row": 1
+        },
+        {
+            "name":"entry-split",
+            "bg":"gold",
+            "width":10,
+            "column": 6,
+            "row": 3
+        },
+        {
+            "name":"entry-cycle",
+            "bg":"gold",
+            "width":10,
+            "column": 6,
+            "row": 4
         },
         {
             "name":"entry-sendText",
@@ -146,7 +174,7 @@
         "Label":[
             {
                 "name":"label-rscript",
-                "text":"解帧脚本：",
+                "text":"解析脚本：",
                 "column": 2,
                 "row": 1
             },

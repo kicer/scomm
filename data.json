@@ -1,0 +1,39 @@
+{
+    "Label": {
+        "name":"label-dtitle",
+        "text":"数据标题",
+        "column": 1,
+        "row": 1
+    },
+    "Entry": {
+        "name":"entry-dfile",
+        "bg":"gold",
+        "width":10,
+        "column": 2,
+        "row": 1
+    },
+    "Text":{
+        "name":"text-dsetting",
+        "bg":"#cccccc",
+        "width":30,
+        "height":3,
+        "column": 1,
+        "columnspan": 3,
+        "rowweight": 1,
+        "row": 2
+    },
+    "Checkbutton":{
+        "name":"ckbtn-dhex",
+        "text":"HEX格式",
+        "sticky": "w",
+        "column": 1,
+        "row": 3
+    },
+    "Button":{
+        "name":"btn-dsave",
+        "text":"保存",
+        "column": 3,
+        "colweight": 1,
+        "row": 3
+    }
+}
