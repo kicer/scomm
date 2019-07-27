@@ -1,4 +1,10 @@
 {
+"Frame":{
+    "name":"frame-root",
+    "text":" ",
+    "column": 1,
+    "row": 1,
+    "weight": 1,
     "Button":[
         {
             "name":"btn-scan",
@@ -77,6 +83,13 @@
             "row": 5
         }
     ],
+    "Combobox":{
+        "name":"cbbox-com",
+        "width":20,
+        "column": 2,
+        "columnspan": 2,
+        "row": 1
+    },
     "Checkbutton":[
         {
             "name":"ckbtn-rhex",
@@ -123,37 +136,25 @@
     ],
     "Entry": [
         {
-            "name":"entry-com",
-            "bg":"gold",
-            "width":20,
-            "column": 2,
-            "columnspan": 2,
-            "row": 1
-        },
-        {
             "name":"entry-baud",
-            "bg":"gold",
             "width":10,
             "column": 4,
             "row": 1
         },
         {
             "name":"entry-split",
-            "bg":"gold",
             "width":10,
             "column": 6,
             "row": 3
         },
         {
             "name":"entry-cycle",
-            "bg":"gold",
             "width":10,
             "column": 6,
             "row": 4
         },
         {
             "name":"entry-sendText",
-            "bg":"gold",
             "column": 1,
             "columnspan": 9,
             "row": 6
@@ -248,4 +249,18 @@
             }
         ]
     }
+},
+"Separator":{
+    "name":"sepline",
+    "column": 1,
+    "row": 2
+},
+"Label":[
+    {
+        "name":"label-status",
+        "text":"scomm",
+        "column": 1,
+        "row": 3
+    }
+]
 }

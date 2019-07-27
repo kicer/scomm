@@ -145,11 +145,11 @@ class TkJson(tkinter.Tk):
 
         try:
             widget_factory = getattr(
-                tkinter, name) if self.prefer_tk else getattr(ttk, name)
+                ttk, name) if self.prefer_tk else getattr(tkinter, name)
         except AttributeError:
             try:
                 widget_factory = getattr(
-                    ttk, name) if self.prefer_tk else getattr(tkinter, name)
+                    tkinter, name) if self.prefer_tk else getattr(ttk, name)
             except AttributeError:
                 traceback.print_exc()
                 raise AttributeError(

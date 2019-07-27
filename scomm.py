@@ -14,10 +14,7 @@ def open_wm_data(root,btn):
     if _cfg:
         root.entry('entry-dfile').set(_cfg.get('title', btn))
         root.get('text-dsetting').insert('end', _cfg.get('value'))
-        if _cfg.get('hex'):
-            root.get('ckbtn-dhex').select()
-        else:
-            root.get('ckbtn-dhex').deselect()
+        root.checkbox('ckbtn-dhex').set(_cfg.get('hex') and 1 or 0)
         root.button('btn-dsave', cmd=_save_dfile, focus=True)
 def open_wm_pack(root,btn):
     print('debug: toplevel=%s'%btn)
@@ -67,4 +64,5 @@ if __name__ == '__main__':
         except:
             pass
 
+    root.configure(background='#e8e8e8')
     root.mainloop()
