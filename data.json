@@ -1,10 +1,19 @@
 {
-    "Label": {
-        "name":"label-dtitle",
-        "text":"数据标题",
-        "column": 1,
-        "row": 1
-    },
+    "Label":[
+        {
+            "name":"label-dtitle",
+            "text":"数据标题",
+            "column": 1,
+            "row": 1
+        },
+        {
+            "name":"label-dempty",
+            "text":" ",
+            "column": 8,
+            "colweight": 1,
+            "row": 1
+        }
+    ],
     "Entry": {
         "name":"entry-dfile",
         "bg":"gold",
@@ -15,10 +24,10 @@
     "Text":{
         "name":"text-dsetting",
         "bg":"#cccccc",
-        "width":30,
-        "height":3,
+        "width":50,
+        "height":5,
         "column": 1,
-        "columnspan": 3,
+        "columnspan": 10,
         "rowweight": 1,
         "row": 2
     },
@@ -29,11 +38,18 @@
         "column": 1,
         "row": 3
     },
-    "Button":{
-        "name":"btn-dsave",
-        "text":"保存",
-        "column": 3,
-        "colweight": 1,
-        "row": 3
-    }
+    "Button":[
+        {
+            "name":"btn-dsend",
+            "text":"发送",
+            "column": 9,
+            "row": 3
+        },
+        {
+            "name":"btn-dsave",
+            "text":"保存",
+            "column": 10,
+            "row": 3
+        }
+    ]
 }

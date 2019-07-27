@@ -1,15 +1,157 @@
 #! /usr/bin/env python3
 
-import os,json
+import os,sys,json
+import serial
+import serial.tools.list_ports
 import tkgen.gengui
 import tkinter
+import threading
+
+
+class UIproc():
+    def __init__(self, app):
+        self.root = app
+        self.combobox_port = self.root.get('cbbox-com')
+        self.entry_baud = self.root.get('entry-baud')
+        self.entry_split = self.root.get('entry-split')
+        self.entry_cycle = self.root.get('entry-cycle')
+        self.entry_encoding = self.root.get('entry-encoding')
+        self.entry_sendText = self.root.get('entry-sendText')
+        self.btn_onoff = self.root.get('btn-onoff')
+        self.canvas_led = self.root.get('canvas-led')
+        self.event_init()
+    def getSendData(self):
+        data = self.entry_sendText.var.get()
+        encoding = self.entry_encoding.var.get()
+        return data.encode(encoding, 'ignore')
+    def serial_open(self):
+        self.entry_baud.configure(state='disabled')
+        self.combobox_port.configure(state='disabled')
+        self.btn_onoff.configure(text='关闭串口')
+        root.get('canvas-led').create_oval(4,4,19,19,fill='green')
+    def serial_close(self):
+        self.entry_baud.configure(state='normal')
+        self.combobox_port.configure(state='normal')
+        self.btn_onoff.configure(text='打开串口')
+        root.get('canvas-led').create_oval(4,4,19,19,fill='red')
+    def read_serial_port(self):
+        return self.combobox_port.get()
+    def read_serial_baud(self):
+        return self.entry_baud.var.get()
+    def set_serial_port_list(self, portList):
+        currText = self.combobox_port.get()
+        _ports = []
+        for i in portList:
+            _ports.append(str(i[0]))
+        self.combobox_port['values'] = _ports
+        if currText in _ports:
+            self.combobox_port.set(currText)
+        else:
+            self.combobox_port.set(_ports[-1])
+    def log(self, s):
+        print('[todo.log]: %s'%s)
+    def event_init(self):
+        self.combobox_port.bind("<<ComboboxSelected>>", lambda x:self.log(self.combobox_port.get()))
+
+
+class SerComm():
+    #root = None
+
+    def __init__(self, app):
+        self.ui = UIproc(app)
+        self.com = serial.Serial()
+        self.thread = None
+        self.alive = threading.Event()
+        self.setting = None
+        self.isDetectSerialPort = False
+        self.receiveProgressStop = True
+        self.sendCount = 0
+        self.recvCount = 0
+
+    def detectSerialPort(self):
+        if not self.isDetectSerialPort:
+            self.isDetectSerialPort = True
+            t = threading.Thread(target=self.detectSerialPortProcess)
+            t.setDaemon(True)
+            t.start()
+
+    def openCloseSerial(self):
+        t = threading.Thread(target=self.openCloseSerialProcess)
+        t.setDaemon(True)
+        t.start()
+
+    def receiveData(self):
+        pass
+
+    def sendData(self):
+        #try:
+        if True:
+            if self.com.is_open:
+                data = self.ui.getSendData()
+                if data and len(data) > 0:
+                    self.com.write(data)
+                    self.sendCount += len(data)
+                    self.ui.log('%s: send data: %s' % (self.com.port,len(data)))
+                    # scheduled send
+                    #if self.sendSettingsScheduledCheckBox.isChecked():
+                    #    if not self.isScheduledSending:
+                    #        t = threading.Thread(target=self.scheduledSend)
+                    #        t.setDaemon(True)
+                    #        t.start()
+        #except Exception as e:
+        #    self.ui.log('%s: send trace: %s' % (self.com.port,str(e)))
+
+    def openCloseSerialProcess(self):
+        try:
+            if self.com.is_open:
+                self.receiveProgressStop = True
+                self.com.close()
+                self.ui.serial_close()
+            else:
+                try:
+                    self.com.baudrate = int(self.ui.read_serial_baud())
+                    self.com.port = self.ui.read_serial_port()
+                    self.com.bytesize = 8
+                    self.com.parity = 'N'
+                    self.com.stopbits = 1
+                    self.com.timeout = None
+                    self.com.open()
+                    self.ui.serial_open()
+                    self.ui.log('%s: open success' % self.com.port)
+                    self.receiveProcess = threading.Thread(target=self.receiveData)
+                    self.receiveProcess.setDaemon(True)
+                    self.receiveProcess.start()
+                except Exception as e:
+                    self.com.close()
+                    self.ui.serial_close()
+                    self.receiveProgressStop = True
+                    self.ui.log('%s: open failed: %s' % (self.com.port,str(e)))
+        except Exception as e:
+            self.ui.log('%s: openClose trace: %s' % (self.com.port,str(e)))
+
+    def findSerialPort(self):
+        self.port_list = list(serial.tools.list_ports.comports())
+        return self.port_list
+
+    def detectSerialPortProcess(self):
+        while(1):
+            portList = self.findSerialPort()
+            if len(portList)>0:
+                self.ui.log('detectSerialPort = %s' % len(portList))
+                self.ui.set_serial_port_list(portList)
+                break
+            time.sleep(1)
+        self.isDetectSerialPort = False
+
+    def safe_exit(self):
+        self.com.close()
+        sys.exit(0)
 
 
 def open_wm_data(root,btn):
     def _save_dfile():
         pass
-    print('debug: toplevel=%s'%btn)
-    root.toplevel('data.json', title='预置数据')
+    root.toplevel('data.json', title='预置数据').configure(bg='#e8e8e8')
     _cfg = root.usercfg.get(btn)
     if _cfg:
         root.entry('entry-dfile').set(_cfg.get('title', btn))
@@ -17,19 +159,19 @@ def open_wm_data(root,btn):
         root.checkbox('ckbtn-dhex').set(_cfg.get('hex') and 1 or 0)
         root.button('btn-dsave', cmd=_save_dfile, focus=True)
 def open_wm_pack(root,btn):
-    print('debug: toplevel=%s'%btn)
-    #root.toplevel('pack.json', title='组帧脚本')
+    pass
+    #root.toplevel('pack.json', title='组帧脚本').configure(bg='#e8e8e8')
 def open_wm_unpack(root,btn):
-    print('debug: toplevel=%s'%btn)
-    #root.toplevel('unpack.json', title='解析脚本')
+    pass
+    #root.toplevel('unpack.json', title='解析脚本').configure(bg='#e8e8e8')
 
 
 if __name__ == '__main__':
     root = tkgen.gengui.TkJson('scomm.json', title='scomm串口调试助手')
-
+    comm = SerComm(root)
+    # 读取用户数据文件
     cfg_file = 'app.json'
     root.usercfg = json.load(open(cfg_file)) if os.path.isfile(cfg_file) else {}
-
     # 预置数据回调函数
     for i in range(10):
         name = 'btn-data%02d'%(i+1)
@@ -63,6 +205,29 @@ if __name__ == '__main__':
                 btn.config(text=_cfg.get('title',name))
         except:
             pass
-
-    root.configure(background='#e8e8e8')
+    # UI相关设置
+    root.get('canvas-led').create_oval(4,4,19,19,fill='gray')
+    root.checkbox('ckbtn-rhex').set(0)
+    root.checkbox('ckbtn-shex').set(0)
+    root.checkbox('ckbtn-0d').set(0)
+    root.checkbox('ckbtn-0a').set(0)
+    root.checkbox('ckbtn-split').set(1)
+    root.checkbox('ckbtn-cycle').set(0)
+    root.checkbox('ckbtn-time').set(1)
+    root.checkbox('ckbtn-sendshow').set(1)
+    root.entry('entry-split').set('50')
+    root.entry('entry-cycle').set('1000')
+    root.entry('entry-baud').set('9600')
+    root.entry('entry-encoding').set('gbk')
+    root.entry('entry-sendText', key='<Return>', cmd=lambda x:comm.sendData()).set('')
+    root.button('btn-scan', cmd=lambda:comm.detectSerialPort())
+    root.button('btn-onoff', cmd=lambda:comm.openCloseSerial())
+    root.button('btn-send', cmd=lambda:comm.sendData())
+    # 其他设置
+    root.configure(bg='#e8e8e8')
+    root.lift() # 把主窗口置于最前面
+    #root.wm_state('zoomed') # 最大化窗口
+    root.protocol("WM_DELETE_WINDOW", lambda:comm.safe_exit())
+    # 启动任务
+    comm.detectSerialPort()
     root.mainloop()

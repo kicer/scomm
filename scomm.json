@@ -8,7 +8,7 @@
     "Button":[
         {
             "name":"btn-scan",
-            "text":"串口设置",
+            "text":"串口扫描",
             "column": 1,
             "weight": 0,
             "row": 1
@@ -68,6 +68,18 @@
             "row": 6
         }
     ],
+    "Canvas":[
+        {
+            "name":"canvas-led",
+            "text":"led",
+            "height":18,
+            "width":18,
+            "weight":0,
+            "sticky":"w",
+            "column": 6,
+            "row": 1
+        }
+    ],
     "Label":[
         {
             "name":"empty-01",
@@ -99,6 +111,20 @@
             "row": 3
         },
         {
+            "name":"ckbtn-sendshow",
+            "text":"发送显示",
+            "sticky": "w",
+            "column": 3,
+            "row": 3
+        },
+        {
+            "name":"ckbtn-time",
+            "text":"收发时间",
+            "sticky": "w",
+            "column": 4,
+            "row": 3
+        },
+        {
             "name":"ckbtn-shex",
             "text":"HEX发送",
             "sticky": "w",
@@ -107,14 +133,14 @@
         },
         {
             "name":"ckbtn-0d",
-            "text":"追加\\r",
+            "text":"追送\\r",
             "sticky": "w",
             "column": 3,
             "row": 4
         },
         {
             "name":"ckbtn-0a",
-            "text":"追加\\n",
+            "text":"追送\\n",
             "sticky": "w",
             "column": 4,
             "row": 4
@@ -183,7 +209,21 @@
                 "name":"label-data",
                 "text":"预置数据：",
                 "column": 2,
-                "row": 7
+                "row": 20
+            },
+            {
+                "name":"label-encoding",
+                "text":"数据编码：",
+                "column": 2,
+                "row": 30
+            }
+        ],
+        "Entry":[
+            {
+                "name":"entry-encoding",
+                "width":10,
+                "column": 2,
+                "row": 31
             }
         ],
         "Button":[
@@ -221,31 +261,31 @@
                 "name":"btn-data01",
                 "text":"data-01",
                 "column": 2,
-                "row": 8
+                "row": 21
             },
             {
                 "name":"btn-data02",
                 "text":"data-02",
                 "column": 2,
-                "row": 9
+                "row": 22
             },
             {
                 "name":"btn-data03",
                 "text":"data-03",
                 "column": 2,
-                "row": 10
+                "row": 23
             },
             {
                 "name":"btn-data04",
                 "text":"data-04",
                 "column": 2,
-                "row": 11
+                "row": 24
             },
             {
                 "name":"btn-data05",
                 "text":"data-05",
                 "column": 2,
-                "row": 12
+                "row": 25
             }
         ]
     }
