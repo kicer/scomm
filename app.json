@@ -1,7 +1,17 @@
 {
     "btn-data01": {
         "title": "握手包",
-        "value": "hello\n",
+        "value": "hello",
+        "hex":0
+    },
+    "btn-data02": {
+        "title": "HEX测试",
+        "value": "01 02 03 04 05",
         "hex":1
+    },
+    "btn-data03": {
+        "title": "中文测试",
+        "value": "举杯邀明月",
+        "hex":0
     }
 }

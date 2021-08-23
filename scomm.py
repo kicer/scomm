@@ -7,6 +7,13 @@ import tkgen.gengui
 import tkinter
 import threading
 
+import time, datetime
+def tsnow():
+    return int(time.time()*1000)
+def strnow():
+    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+def tohex(b):
+    return ' '.join(['%02X'%x for x in b])
 
 class UIproc():
     def __init__(self, app):
@@ -19,11 +26,28 @@ class UIproc():
         self.entry_sendText = self.root.get('entry-sendText')
         self.btn_onoff = self.root.get('btn-onoff')
         self.canvas_led = self.root.get('canvas-led')
+        self.label_status = self.root.get('label-status')
+        self.ckbtn_shex = self.root.get('ckbtn-shex')
+        self.ckbtn_rhex = self.root.get('ckbtn-rhex')
+        self.ckbtn_sendshow = self.root.get('ckbtn-sendshow')
+        self.ckbtn_time = self.root.get('ckbtn-time')
+        self.text_recv = self.root.get('text-recv')
+        self.lastTicks = tsnow()
         self.event_init()
     def getSendData(self):
         data = self.entry_sendText.var.get()
         encoding = self.entry_encoding.var.get()
-        return data.encode(encoding, 'ignore')
+        return self.ckbtn_shex.var.get() and bytes.fromhex(data) or data.encode(encoding, 'ignore')
+    def dmesg(self, cate, data):
+        text =  self.ckbtn_time.var.get() and '[%s]'%strnow() or ''
+        encoding = self.entry_encoding.var.get()
+        if cate == 'send' and self.ckbtn_sendshow.var.get():
+            text += '> '
+            text += self.ckbtn_shex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+        elif cate == 'recv':
+            text += '< '
+            text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+        self.text_recv.insert('end', text+'\n')
     def serial_open(self):
         self.entry_baud.configure(state='disabled')
         self.combobox_port.configure(state='disabled')
@@ -49,7 +73,8 @@ class UIproc():
         else:
             self.combobox_port.set(_ports[-1])
     def log(self, s):
-        print('[todo.log]: %s'%s)
+        print('[sys.log]: %s'%s)
+        self.label_status.var.set(str(s))
     def event_init(self):
         self.combobox_port.bind("<<ComboboxSelected>>", lambda x:self.log(self.combobox_port.get()))
 
@@ -76,22 +101,32 @@ class SerComm():
             t.start()
 
     def openCloseSerial(self):
+        self.ui.log('Serial Port waitting...')
         t = threading.Thread(target=self.openCloseSerialProcess)
         t.setDaemon(True)
         t.start()
 
     def receiveData(self):
-        pass
+        try:
+            while not self.receiveProgressStop:
+                data = self.com.read(self.com.in_waiting or 1)
+                if data:
+                    self.ui.dmesg('recv', data)
+        except Exception as e:
+            self.ui.log('%s: receive trace: %s' % (self.com.port,str(e)))
 
     def sendData(self):
         #try:
         if True:
-            if self.com.is_open:
+            if not self.com.is_open:
+                self.ui.log('Serial Port not open')
+            else:
                 data = self.ui.getSendData()
                 if data and len(data) > 0:
                     self.com.write(data)
                     self.sendCount += len(data)
-                    self.ui.log('%s: send data: %s' % (self.com.port,len(data)))
+                    self.ui.dmesg('send', data)
+                    self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
                     # scheduled send
                     #if self.sendSettingsScheduledCheckBox.isChecked():
                     #    if not self.isScheduledSending:
@@ -107,6 +142,7 @@ class SerComm():
                 self.receiveProgressStop = True
                 self.com.close()
                 self.ui.serial_close()
+                self.ui.log('%s: closed' % self.com.port)
             else:
                 try:
                     self.com.baudrate = int(self.ui.read_serial_baud())
@@ -148,27 +184,39 @@ class SerComm():
         sys.exit(0)
 
 
-def open_wm_data(root,btn):
-    def _save_dfile():
+class TopWin():
+    def __init__(self, root):
+        self.root = root
+    def set_send_data(self, btn):
+        _cfg = self.root.usercfg.get(btn, {})
+        if _cfg:
+            val = _cfg.get('value')
+            self.root.get('entry-sendText').var.set(val)
+            self.root.get('ckbtn-shex').var.set(_cfg.get('hex') and 1 or 0)
+            self.root.get('btn-send').invoke()
+    def win_data(self, event):
+        def _save_dfile():
+            pass
+        self.root.toplevel('data.json', title='预置数据').configure(bg='#e8e8e8')
+        btn = event.widget._name
+        _cfg = self.root.usercfg.get(btn, {})
+        self.root.entry('entry-dfile').set(_cfg.get('title', btn))
+        self.root.get('text-dsetting').insert('end', _cfg.get('value',''))
+        self.root.checkbox('ckbtn-dhex').set(_cfg.get('hex') and 1 or 0)
+        self.root.button('btn-dsave', cmd=_save_dfile, focus=True)
+        self.root.button('btn-dsend', cmd=lambda x=btn:self.set_send_data(x))
+    def win_pack(self, btn):
         pass
-    root.toplevel('data.json', title='预置数据').configure(bg='#e8e8e8')
-    _cfg = root.usercfg.get(btn)
-    if _cfg:
-        root.entry('entry-dfile').set(_cfg.get('title', btn))
-        root.get('text-dsetting').insert('end', _cfg.get('value'))
-        root.checkbox('ckbtn-dhex').set(_cfg.get('hex') and 1 or 0)
-        root.button('btn-dsave', cmd=_save_dfile, focus=True)
-def open_wm_pack(root,btn):
-    pass
-    #root.toplevel('pack.json', title='组帧脚本').configure(bg='#e8e8e8')
-def open_wm_unpack(root,btn):
-    pass
-    #root.toplevel('unpack.json', title='解析脚本').configure(bg='#e8e8e8')
+        #root.toplevel('pack.json', title='组帧脚本').configure(bg='#e8e8e8')
+    def win_unpack(self, btn):
+        pass
+        #root.toplevel('unpack.json', title='解析脚本').configure(bg='#e8e8e8')
 
 
 if __name__ == '__main__':
     root = tkgen.gengui.TkJson('scomm.json', title='scomm串口调试助手')
     comm = SerComm(root)
+    wm = TopWin(root)
     # 读取用户数据文件
     cfg_file = 'app.json'
     root.usercfg = json.load(open(cfg_file)) if os.path.isfile(cfg_file) else {}
@@ -177,7 +225,9 @@ if __name__ == '__main__':
         name = 'btn-data%02d'%(i+1)
         try:
             btn = root.get(name)
-            root.button(name, lambda x=name: open_wm_data(root,x))
+            root.button(name, lambda x=name: wm.set_send_data(x))
+            btn.bind('<Button-2>', wm.win_data)
+            btn.bind('<Button-3>', wm.win_data)
             _cfg = root.usercfg.get(name)
             if _cfg and btn:
                 btn.config(text=_cfg.get('title',name))
@@ -188,7 +238,7 @@ if __name__ == '__main__':
         name = 'btn-pack%02d'%(i+1)
         try:
             btn = root.get(name)
-            root.button(name, lambda x=name: open_wm_pack(root,x))
+            root.button(name, lambda x=name: wm.win_pack(root,x))
             _cfg = root.usercfg.get(name)
             if _cfg and btn:
                 btn.config(text=_cfg.get('title',name))
@@ -199,7 +249,7 @@ if __name__ == '__main__':
         name = 'btn-unpack%02d'%(i+1)
         try:
             btn = root.get(name)
-            root.button(name, lambda x=name: open_wm_unpack(root,x))
+            root.button(name, lambda x=name: wm.win_unpack(root,x))
             _cfg = root.usercfg.get(name)
             if _cfg and btn:
                 btn.config(text=_cfg.get('title',name))
@@ -215,14 +265,17 @@ if __name__ == '__main__':
     root.checkbox('ckbtn-cycle').set(0)
     root.checkbox('ckbtn-time').set(1)
     root.checkbox('ckbtn-sendshow').set(1)
-    root.entry('entry-split').set('50')
-    root.entry('entry-cycle').set('1000')
+    root.entry('entry-split').set('50ms')
+    root.entry('entry-cycle').set('1000ms')
     root.entry('entry-baud').set('9600')
     root.entry('entry-encoding').set('gbk')
     root.entry('entry-sendText', key='<Return>', cmd=lambda x:comm.sendData()).set('')
     root.button('btn-scan', cmd=lambda:comm.detectSerialPort())
     root.button('btn-onoff', cmd=lambda:comm.openCloseSerial())
     root.button('btn-send', cmd=lambda:comm.sendData())
+    _stvar = tkinter.StringVar()
+    root.label('label-status').textvariable=_stvar
+    root.label('label-status').var =_stvar
     # 其他设置
     root.configure(bg='#e8e8e8')
     root.lift() # 把主窗口置于最前面
