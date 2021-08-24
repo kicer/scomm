@@ -12,9 +12,17 @@
 7. HEX格式、时间戳、循环发送、保存文件等
 
 
+## 安装运行
+```bash
+# install python3
+python3 scomm.py
+```
+
+
 ## 运行环境
 * python3.x
 * tkinter
+* pyserial
 
 
 ## 解析脚本
