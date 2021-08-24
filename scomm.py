@@ -38,6 +38,8 @@ class UIproc():
         self.ckbtn_0d = self.root.get('ckbtn-0d')
         self.ckbtn_0a = self.root.get('ckbtn-0a')
         self.lastRecvTicks = 0
+        self.lastCursor = "end"
+        self.lastRecvData = b''
         self.event_init()
     def getSendData(self):
         data = self.entry_sendText.var.get()
@@ -55,33 +57,30 @@ class UIproc():
         if cate == 'send' and self.ckbtn_sendshow.var.get():
             text += '> '
             text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
-            #self.log('todo: [%s] send insert start' % tsnow())
-            #self.text_recv.insert('end', '\n'+text)
-            text = '\n'+text
-            #self.log('todo: [%s] send insert ok' % tsnow())
+            self.text_recv.insert('end', '\n'+text)
             self.lastRecvTicks = 0
+            self.lastCursor = "end"
+            self.lastRecvData = b''
         elif cate == 'recv':
             if(ts-self.lastRecvTicks>splitms):
+                self.lastCursor = self.text_recv.index('end')
+                self.lastRecvData = data
                 text += '< '
                 text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
-                #self.log('todo: [%s] recv1 insert start' % tsnow())
-                #self.text_recv.insert('end', '\n'+text)
-                text = '\n'+text
-                #self.log('todo: [%s] recv1 insert ok' % tsnow())
+                self.text_recv.insert('end', '\n'+text)
             else:
-                text = self.ckbtn_rhex.var.get() and (' '+tohex(data)) or data.decode(encoding, 'ignore')
-                #self.log('todo: [%s] recv2 insert start' % tsnow())
-                #self.text_recv.insert('end', text)
-                #self.log('todo: [%s] recv2 insert ok' % tsnow())
+                data = self.lastRecvData + data
+                text += '< '
+                text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+                _i0 = self.lastCursor
+                self.text_recv.delete(_i0,'end')
+                self.text_recv.insert(_i0, '\n'+text)
             self.lastRecvTicks = ts
             bg,fg='','blue'
-        #self.text_recv.configure(state=tkinter.NORMAL)
-        self.text_recv.insert('end', text)
         _i1 = self.text_recv.index('end')
         self.text_recv.tag_add('%s'%ts, _i0, _i1)
         self.text_recv.tag_config('%s'%ts,background=bg,foreground=fg)
         self.text_recv.yview('end')
-        #self.text_recv.configure(state=tkinter.DISABLED)
     def serial_open(self):
         self.entry_baud.configure(state='disabled')
         self.combobox_port.configure(state='disabled')
@@ -153,7 +152,7 @@ class SerComm():
             if True:
                 data = self.com.read(self.com.in_waiting)
                 if data:
-                    self.ui.log('%s: recv %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
+                    self.ui.log('%s: recv %s bytes: %s...' % (self.com.port,len(data),str(data)[:-1]))
                     self.ui.dmesg('recv', data)
                 time.sleep(0.050)
             #except Exception as e:
@@ -171,7 +170,7 @@ class SerComm():
                     self.com.write(data)
                     self.sendCount += len(data)
                     self.ui.dmesg('send', data)
-                    self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
+                    self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:-1]))
                     # scheduled send
                     #if self.sendSettingsScheduledCheckBox.isChecked():
                     #    if not self.isScheduledSending:
@@ -241,6 +240,7 @@ class SerComm():
 class TopWin():
     def __init__(self, root):
         self.root = root
+        self.root.unpack = {}
         self.WinData = None
         self.WinPack = None
         self.WinUnpack = None
@@ -251,10 +251,8 @@ class TopWin():
             self.root.get('entry-sendText').var.set(val)
             self.root.get('ckbtn-shex').var.set(_cfg.get('hex') and 1 or 0)
             self.root.get('btn-send').invoke()
-    def set_pack(self, btn):
-        self.root.pack = self.root.usercfg.get(btn,{}).get('value')
     def set_unpack(self, btn):
-        self.root.unpack = self.root.usercfg.get(btn,{}).get('value')
+        self.root.unpack[btn] = self.root.get(btn).var.get() and self.root.usercfg.get(btn,{}).get('value') or None
         print(self.root.unpack)
     def save_cfg(self, btn, dat):
         with open('usercfg.json', 'wb+') as f:
@@ -277,20 +275,6 @@ class TopWin():
         self.root.get('text-dsetting').insert('end', _cfg.get('value',''))
         self.root.checkbox('ckbtn-dhex').set(_cfg.get('hex') and 1 or 0)
         self.root.button('btn-dsave', cmd=lambda x=btn:_save(x), focus=True)
-    def win_pack(self, event):
-        def _save(w):
-            dat = {'title':self.root.get('entry-pfile').var.get()}
-            dat['value'] = self.root.get('text-psetting').get('1.0','end -1 chars')
-            self.save_cfg(w,dat)
-            self.WinPack.destroy()
-        if self.WinPack: self.WinPack.destroy()
-        self.WinPack = self.root.toplevel('pack.ui', title='组帧脚本')
-        self.WinPack.configure(bg='#e8e8e8')
-        btn = event.widget._name
-        _cfg = self.root.usercfg.get(btn, {})
-        self.root.entry('entry-pfile').set(_cfg.get('title', btn))
-        self.root.get('text-psetting').insert('end', _cfg.get('value',''))
-        self.root.button('btn-psave', cmd=lambda x=btn:_save(x), focus=True)
     def win_unpack(self, event):
         def _save(w):
             dat = {'title':self.root.get('entry-ufile').var.get()}
@@ -322,19 +306,6 @@ if __name__ == '__main__':
             root.button(name, cmd=lambda x=name: wm.set_send_data(x))
             btn.bind('<Button-2>', wm.win_data)
             btn.bind('<Button-3>', wm.win_data)
-            _cfg = root.usercfg.get(name)
-            if _cfg and btn:
-                btn.config(text=_cfg.get('title',name))
-        except:
-            pass
-    # 组帧脚本回调函数
-    for i in range(10):
-        name = 'btn-pack%02d'%(i+1)
-        try:
-            btn = root.get(name)
-            root.button(name, cmd=lambda x=name: wm.set_pack(x))
-            btn.bind('<Button-2>', wm.win_pack)
-            btn.bind('<Button-3>', wm.win_pack)
             _cfg = root.usercfg.get(name)
             if _cfg and btn:
                 btn.config(text=_cfg.get('title',name))
