@@ -127,7 +127,6 @@ class SerComm():
                     self.ui.log('recv1: %s' % strnow()) 
                     self.ui.dmesg('recv', data)
                     self.ui.log('%s: receive: %s' % (self.com.port,str(data)))
-                    self.ui.log('recv2: %s' % strnow()) 
                 time.sleep(0.050)
             #except Exception as e:
             else:
