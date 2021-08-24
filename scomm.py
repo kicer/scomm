@@ -240,6 +240,8 @@ class SerComm():
         self.isDetectSerialPort = False
 
     def safe_exit(self):
+        self.receiveProgressStop = True
+        time.sleep(0.1)
         self.com.close()
         sys.exit(0)
 
@@ -265,6 +267,8 @@ class TopWin():
             self.root.usercfg[btn] = dat
             encoding = self.root.get('entry-encoding').var.get()
             f.write(json.dumps(self.root.usercfg,indent=4,sort_keys=True).encode(encoding,'ignore'))
+            self.set_unpack(btn)
+            self.root.get(btn).configure(text=dat.get('title'))
     def win_data(self, event):
         def _save(w):
             dat = {'title':self.root.get('entry-dfile').var.get()}
@@ -314,7 +318,7 @@ if __name__ == '__main__':
             btn.bind('<Button-3>', wm.win_data)
             _cfg = root.usercfg.get(name)
             if _cfg and btn:
-                btn.config(text=_cfg.get('title',name))
+                btn.configure(text=_cfg.get('title',name))
         except:
             pass
     # 解析脚本回调函数
@@ -329,7 +333,7 @@ if __name__ == '__main__':
             btn.var = var
             _cfg = root.usercfg.get(name)
             if _cfg and btn:
-                btn.config(text=_cfg.get('title',name))
+                btn.configure(text=_cfg.get('title',name))
             root.checkbox(name).set(0)
         except:
             pass

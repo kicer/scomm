@@ -10,7 +10,6 @@
             "name":"btn-scan",
             "text":"串口扫描",
             "column": 1,
-            "weight": 0,
             "row": 1
         },
         {
