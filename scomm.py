@@ -157,15 +157,14 @@ class SerComm():
 
     def receiveData(self):
         while not self.receiveProgressStop:
-            #try:
-            if True:
+            try:
                 data = self.com.read(self.com.in_waiting)
                 if data:
                     self.ui.log('%s: recv %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
                     self.ui.dmesg('recv', data)
                 time.sleep(0.01)
-            #except Exception as e:
-            #    self.ui.log('%s: receive trace: %s' % (self.com.port,str(e)))
+            except Exception as e:
+                self.ui.log('%s: receive trace: %s' % (self.com.port,str(e)))
 
     def sendData(self):
         #try:

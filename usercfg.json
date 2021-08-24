@@ -17,5 +17,9 @@
     "btn-unpack01": {
         "title": "HEX print",
         "value": "' '.join(['%02X'%x for x in data])"
+    },
+    "btn-unpack02": {
+        "title": "C style print",
+        "value": "'\\\\x'+'\\\\x'.join('%02x'%x for x in data)"
     }
 }
