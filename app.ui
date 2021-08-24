@@ -226,7 +226,7 @@
                 "row": 31
             }
         ],
-        "Button":[
+        "Checkbutton":[
             {
                 "name":"btn-unpack01",
                 "text":"unpack-01",
@@ -256,7 +256,9 @@
                 "text":"unpack-05",
                 "column": 2,
                 "row": 6
-            },
+            }
+        ],
+        "Button":[
             {
                 "name":"btn-data01",
                 "text":"data-01",

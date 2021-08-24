@@ -27,8 +27,8 @@
         "value": ""
     },
     "btn-unpack01": {
-        "title": "btn-unpack01",
-        "value": ""
+        "title": "HEX print",
+        "value": "''.join(['%02X'%x for x in data])"
     },
     "btn-unpack03": {
         "title": "btn-unpack03",

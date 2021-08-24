@@ -252,9 +252,10 @@ class TopWin():
             self.root.get('ckbtn-shex').var.set(_cfg.get('hex') and 1 or 0)
             self.root.get('btn-send').invoke()
     def set_pack(self, btn):
-        pass
+        self.root.pack = self.root.usercfg.get(btn,{}).get('value')
     def set_unpack(self, btn):
-        pass
+        self.root.unpack = self.root.usercfg.get(btn,{}).get('value')
+        print(self.root.unpack)
     def save_cfg(self, btn, dat):
         with open('usercfg.json', 'wb+') as f:
             self.root.usercfg[btn] = dat
@@ -318,7 +319,7 @@ if __name__ == '__main__':
         name = 'btn-data%02d'%(i+1)
         try:
             btn = root.get(name)
-            root.button(name, lambda x=name: wm.set_send_data(x))
+            root.button(name, cmd=lambda x=name: wm.set_send_data(x))
             btn.bind('<Button-2>', wm.win_data)
             btn.bind('<Button-3>', wm.win_data)
             _cfg = root.usercfg.get(name)
@@ -331,7 +332,7 @@ if __name__ == '__main__':
         name = 'btn-pack%02d'%(i+1)
         try:
             btn = root.get(name)
-            root.button(name, lambda x=name: wm.set_pack(x))
+            root.button(name, cmd=lambda x=name: wm.set_pack(x))
             btn.bind('<Button-2>', wm.win_pack)
             btn.bind('<Button-3>', wm.win_pack)
             _cfg = root.usercfg.get(name)
@@ -340,16 +341,19 @@ if __name__ == '__main__':
         except:
             pass
     # 解析脚本回调函数
+    var = tkinter.IntVar()
     for i in range(10):
         name = 'btn-unpack%02d'%(i+1)
         try:
             btn = root.get(name)
-            root.button(name, lambda x=name: wm.set_unpack(x))
+            root.button(name, cmd=lambda x=name: wm.set_unpack(x))
             btn.bind('<Button-2>', wm.win_unpack)
             btn.bind('<Button-3>', wm.win_unpack)
+            btn.var = var
             _cfg = root.usercfg.get(name)
             if _cfg and btn:
                 btn.config(text=_cfg.get('title',name))
+            root.checkbox(name).set(0)
         except:
             pass
     # UI相关设置
@@ -362,8 +366,8 @@ if __name__ == '__main__':
     root.checkbox('ckbtn-cycle').set(0)
     root.checkbox('ckbtn-time').set(1)
     root.checkbox('ckbtn-sendshow').set(1)
-    root.entry('entry-split').set('100ms')
-    root.entry('entry-cycle').set('1000ms')
+    root.entry('entry-split').set('99ms')
+    root.entry('entry-cycle').set('1024ms')
     root.entry('entry-baud').set('9600')
     root.entry('entry-encoding').set('gbk')
     root.entry('entry-sendText', key='<Return>', cmd=lambda x:comm.sendData()).set('')
