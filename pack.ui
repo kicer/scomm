@@ -33,12 +33,6 @@
     },
     "Button":[
         {
-            "name":"btn-pexec",
-            "text":"执行",
-            "column": 9,
-            "row": 3
-        },
-        {
             "name":"btn-psave",
             "text":"保存",
             "column": 10,

@@ -267,7 +267,7 @@ class TopWin():
             dat['hex'] = self.root.get('ckbtn-dhex').var.get() and 1 or 0
             self.save_cfg(w, dat)
             self.WinData.destroy()
-        if self.WinData: return
+        if self.WinData: self.WinData.destroy()
         self.WinData = self.root.toplevel('data.ui', title='预置数据')
         self.WinData.configure(bg='#e8e8e8')
         btn = event.widget._name
@@ -276,14 +276,13 @@ class TopWin():
         self.root.get('text-dsetting').insert('end', _cfg.get('value',''))
         self.root.checkbox('ckbtn-dhex').set(_cfg.get('hex') and 1 or 0)
         self.root.button('btn-dsave', cmd=lambda x=btn:_save(x), focus=True)
-        self.root.button('btn-dsend', cmd=lambda x=btn:self.set_send_data(x))
     def win_pack(self, event):
         def _save(w):
             dat = {'title':self.root.get('entry-pfile').var.get()}
             dat['value'] = self.root.get('text-psetting').get('1.0','end -1 chars')
             self.save_cfg(w,dat)
             self.WinPack.destroy()
-        if self.WinPack: return
+        if self.WinPack: self.WinPack.destroy()
         self.WinPack = self.root.toplevel('pack.ui', title='组帧脚本')
         self.WinPack.configure(bg='#e8e8e8')
         btn = event.widget._name
@@ -291,14 +290,13 @@ class TopWin():
         self.root.entry('entry-pfile').set(_cfg.get('title', btn))
         self.root.get('text-psetting').insert('end', _cfg.get('value',''))
         self.root.button('btn-psave', cmd=lambda x=btn:_save(x), focus=True)
-        self.root.button('btn-pexec', cmd=lambda x=btn:self.set_pack(x))
     def win_unpack(self, event):
         def _save(w):
             dat = {'title':self.root.get('entry-ufile').var.get()}
             dat['value'] = self.root.get('text-usetting').get('1.0','end -1 chars')
             self.save_cfg(w,dat)
             self.WinUnpack.destroy()
-        if self.WinUnpack: return
+        if self.WinUnpack: self.WinUnpack.destroy()
         self.WinUnpack = self.root.toplevel('unpack.ui', title='解析脚本')
         self.WinUnpack.configure(bg='#e8e8e8')
         btn = event.widget._name
@@ -306,7 +304,6 @@ class TopWin():
         self.root.entry('entry-ufile').set(_cfg.get('title', btn))
         self.root.get('text-usetting').insert('end', _cfg.get('value',''))
         self.root.button('btn-usave', cmd=lambda x=btn:_save(x), focus=True)
-        self.root.button('btn-uexec', cmd=lambda x=btn:self.set_unpack(x))
 
 
 if __name__ == '__main__':

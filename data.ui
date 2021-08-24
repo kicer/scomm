@@ -40,12 +40,6 @@
     },
     "Button":[
         {
-            "name":"btn-dsend",
-            "text":"发送",
-            "column": 9,
-            "row": 3
-        },
-        {
             "name":"btn-dsave",
             "text":"保存",
             "column": 10,
