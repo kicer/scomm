@@ -34,62 +34,73 @@ class UIproc():
         self.ckbtn_sendshow = self.root.get('ckbtn-sendshow')
         self.ckbtn_time = self.root.get('ckbtn-time')
         self.text_recv = self.root.get('text-recv')
-        self.entry_split = self.root.get('entry-split')
+        self.ckbtn_split = self.root.get('ckbtn-split')
         self.ckbtn_0d = self.root.get('ckbtn-0d')
         self.ckbtn_0a = self.root.get('ckbtn-0a')
+        self.ckbtn_cycle = self.root.get('ckbtn-cycle')
         self.lastRecvTicks = 0
         self.lastCursor = "end"
         self.lastRecvData = b''
+        self.wait_sendData = b''
+        self._lock_dmesg = False
         self.event_init()
-    def getSendData(self):
-        data = self.entry_sendText.var.get()
-        encoding = self.entry_encoding.var.get()
-        dat = self.ckbtn_shex.var.get() and bytes.fromhex(data) or data.encode(encoding, 'ignore')
-        dat += self.ckbtn_0d.var.get() and b'\r' or b''
-        dat += self.ckbtn_0a.var.get() and b'\n' or b''
-        return dat
+    def getSendData(self, cache=True):
+        if not cache:
+            data = self.entry_sendText.var.get()
+            encoding = self.entry_encoding.var.get()
+            dat = self.ckbtn_shex.var.get() and bytes.fromhex(data) or data.encode(encoding, 'ignore')
+            dat += self.ckbtn_0d.var.get() and b'\r' or b''
+            dat += self.ckbtn_0a.var.get() and b'\n' or b''
+            self.wait_sendData = dat
+        return self.wait_sendData
+    def getSendDataLoop(self):
+        while True:
+            self.getSendData(cache=False)
+            time.sleep(1)
     def dmesg(self, cate, data):
+        while self._lock_dmesg: time.sleep(0.01)
+        self._lock_dmesg = True
         text =  self.ckbtn_time.var.get() and '[%s]'%strnow() or ''
         encoding = self.entry_encoding.var.get()
-        splitms = int(self.entry_split.var.get().replace('ms',''))
+        splitms = self.ckbtn_split.var.get() and int(self.entry_split.var.get().replace('ms','')) or 0
         ts = tsnow()
-        _i0 = self.text_recv.index('end');bg,fg='','black'
+        _i0,fg='end','black'
         if cate == 'send' and self.ckbtn_sendshow.var.get():
             text += '> '
             text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+            _i0 = self.text_recv.index('end')
             self.text_recv.insert('end', '\n'+text)
             self.lastRecvTicks = 0
-            self.lastCursor = "end"
+            self.lastCursor = 'end'
             self.lastRecvData = b''
         elif cate == 'recv':
-            _ic = 'end'
             if(ts-self.lastRecvTicks>splitms):
                 self.lastCursor = self.text_recv.index('end')
                 self.lastRecvData = data
                 text += '< '
                 text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
                 #self.text_recv.insert('end', '\n'+text)
-                #print('##### todo:recv1 = %sbytes'%len(data))
             else:
                 data = self.lastRecvData + data
                 self.lastRecvData = data
                 text += '< '
                 text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
-                _i0 = self.lastCursor; _ic = _i0
-                self.text_recv.delete(_i0,'end')
+                _i0 = self.lastCursor
                 #self.text_recv.insert(_i0, '\n'+text)
-                #print('##### todo:recv2 = %sbytes'%len(data))
             for cb in self.root.unpack.values():
                 try:
                     if cb: text += '\n[%s] %s'%(cb['title'],eval(cb['value'], {"data":data}))
                 except: pass
-            self.text_recv.insert(_ic, '\n'+text)
+            self.text_recv.delete(_i0,'end')
+            _i0 = self.text_recv.index('end')
+            self.text_recv.insert(_i0, '\n'+text)
             self.lastRecvTicks = ts
-            bg,fg='','blue'
+            fg='blue'
         _i1 = self.text_recv.index('end')
         self.text_recv.tag_add('%s'%ts, _i0, _i1)
-        self.text_recv.tag_config('%s'%ts,background=bg,foreground=fg)
+        self.text_recv.tag_config('%s'%ts,foreground=fg)
         self.text_recv.yview('end')
+        self._lock_dmesg = False
     def serial_open(self):
         self.entry_baud.configure(state='disabled')
         self.combobox_port.configure(state='disabled')
@@ -121,6 +132,12 @@ class UIproc():
         if f:
             f.write(self.text_recv.get('1.0','end'))
             f.close()
+    def send_waitting(self):
+        if self.ckbtn_cycle.var.get():
+            ts = int(self.entry_cycle.var.get().replace('ms',''))/1000.0
+            time.sleep(ts)
+            return True
+        return False
     def log(self, s):
         print('[sys.log]: %s'%s)
         self.label_status.var.set(str(s))
@@ -138,7 +155,7 @@ class SerComm():
         self.alive = threading.Event()
         self.setting = None
         self.isDetectSerialPort = False
-        self.receiveProgressStop = True
+        self.comProgressStop = True
         self.sendCount = 0
         self.recvCount = 0
 
@@ -155,42 +172,50 @@ class SerComm():
         t.setDaemon(True)
         t.start()
 
-    def receiveData(self):
-        while not self.receiveProgressStop:
+    def receiveDataLoop(self):
+        while not self.comProgressStop:
             try:
-                data = self.com.read(self.com.in_waiting)
-                if data:
-                    self.ui.log('%s: recv %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
-                    self.ui.dmesg('recv', data)
-                time.sleep(0.01)
+                if self.com.is_open:
+                    data = self.com.read(self.com.in_waiting)
+                    if data:
+                        self.ui.log('%s: recv %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
+                        self.ui.dmesg('recv', data)
+                    time.sleep(0.01)
+                else:
+                    time.sleep(1)
             except Exception as e:
                 self.ui.log('%s: receive trace: %s' % (self.com.port,str(e)))
 
+    def sendDataLoop(self):
+        while not self.comProgressStop:
+            try:
+                if self.com.is_open and self.ui.send_waitting():
+                    data = self.ui.getSendData(cache=True)
+                    if data and len(data) > 0:
+                        self.com.write(data)
+                        self.sendCount += len(data)
+                        self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
+                        self.ui.dmesg('send', data)
+                else:
+                    time.sleep(1)
+            except Exception as e:
+                self.ui.log('%s: send trace: %s' % (self.com.port,str(e)))
+
     def sendData(self):
-        #try:
-        if True:
-            if not self.com.is_open:
-                self.ui.log('Serial Port not open')
-            else:
-                data = self.ui.getSendData()
-                if data and len(data) > 0:
-                    self.com.write(data)
-                    self.sendCount += len(data)
-                    self.ui.dmesg('send', data)
-                    self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
-                    # scheduled send
-                    #if self.sendSettingsScheduledCheckBox.isChecked():
-                    #    if not self.isScheduledSending:
-                    #        t = threading.Thread(target=self.scheduledSend)
-                    #        t.setDaemon(True)
-                    #        t.start()
-        #except Exception as e:
-        #    self.ui.log('%s: send trace: %s' % (self.com.port,str(e)))
+        if not self.com.is_open:
+            self.ui.log('Serial Port not open')
+        else:
+            data = self.ui.getSendData(cache=False)
+            if data and len(data) > 0:
+                self.com.write(data)
+                self.sendCount += len(data)
+                self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
+                self.ui.dmesg('send', data)
 
     def openCloseSerialProcess(self):
         try:
             if self.com.is_open:
-                self.receiveProgressStop = True
+                self.comProgressStop = True
                 self.com.close()
                 self.ui.serial_close()
                 self.ui.log('%s: closed' % self.com.port)
@@ -207,14 +232,20 @@ class SerComm():
                     self.com.open()
                     self.ui.serial_open()
                     self.ui.log('%s: open success' % self.com.port)
-                    self.receiveProgressStop = False
-                    self.receiveProcess = threading.Thread(target=self.receiveData)
+                    self.comProgressStop = False
+                    self.receiveProcess = threading.Thread(target=self.receiveDataLoop)
                     self.receiveProcess.setDaemon(True)
                     self.receiveProcess.start()
+                    self.sendProcess = threading.Thread(target=self.sendDataLoop)
+                    self.sendProcess.setDaemon(True)
+                    self.sendProcess.start()
+                    self.sendProcess = threading.Thread(target=self.ui.getSendDataLoop)
+                    self.sendProcess.setDaemon(True)
+                    self.sendProcess.start()
                 except Exception as e:
                     self.com.close()
                     self.ui.serial_close()
-                    self.receiveProgressStop = True
+                    self.comProgressStop = True
                     self.ui.log('%s: open failed: %s' % (self.com.port,str(e)))
         except Exception as e:
             self.ui.log('%s: openClose trace: %s' % (self.com.port,str(e)))
@@ -240,7 +271,7 @@ class SerComm():
         self.isDetectSerialPort = False
 
     def safe_exit(self):
-        self.receiveProgressStop = True
+        self.comProgressStop = True
         time.sleep(0.1)
         self.com.close()
         sys.exit(0)
