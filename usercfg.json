@@ -30,8 +30,20 @@
         "title": "HEX print",
         "value": "''.join(['%02X'%x for x in data])"
     },
+    "btn-unpack02": {
+        "title": "btn-unpack02",
+        "value": ""
+    },
     "btn-unpack03": {
         "title": "btn-unpack03",
+        "value": ""
+    },
+    "btn-unpack04": {
+        "title": "btn-unpack04",
+        "value": ""
+    },
+    "btn-unpack05": {
+        "title": "btn-unpack05",
         "value": ""
     }
 }

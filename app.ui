@@ -32,36 +32,6 @@
             "row": 4
         },
         {
-            "name":"btn-pack01",
-            "text":"pack-01",
-            "column": 2,
-            "row": 5
-        },
-        {
-            "name":"btn-pack02",
-            "text":"pack-02",
-            "column": 3,
-            "row": 5
-        },
-        {
-            "name":"btn-pack03",
-            "text":"pack-03",
-            "column": 4,
-            "row": 5
-        },
-        {
-            "name":"btn-pack04",
-            "text":"pack-04",
-            "column": 5,
-            "row": 5
-        },
-        {
-            "name":"btn-pack05",
-            "text":"pack-05",
-            "column": 6,
-            "row": 5
-        },
-        {
             "name":"btn-send",
             "text":"发送",
             "column": 10,
@@ -87,12 +57,6 @@
             "column": 9,
             "colweight": 1,
             "row": 1
-        },
-        {
-            "name":"label-sscript",
-            "text":"组帧脚本：",
-            "column": 1,
-            "row": 5
         }
     ],
     "Combobox":{
@@ -215,7 +179,7 @@
                 "name":"label-encoding",
                 "text":"数据编码：",
                 "column": 2,
-                "row": 30
+                "row": 40
             }
         ],
         "Entry":[
@@ -223,7 +187,7 @@
                 "name":"entry-encoding",
                 "width":10,
                 "column": 2,
-                "row": 31
+                "row": 41
             }
         ],
         "Checkbutton":[
@@ -288,6 +252,36 @@
                 "text":"data-05",
                 "column": 2,
                 "row": 25
+            },
+            {
+                "name":"btn-data06",
+                "text":"data-06",
+                "column": 2,
+                "row": 26
+            },
+            {
+                "name":"btn-data07",
+                "text":"data-07",
+                "column": 2,
+                "row": 27
+            },
+            {
+                "name":"btn-data08",
+                "text":"data-08",
+                "column": 2,
+                "row": 28
+            },
+            {
+                "name":"btn-data09",
+                "text":"data-09",
+                "column": 2,
+                "row": 29
+            },
+            {
+                "name":"btn-data10",
+                "text":"data-10",
+                "column": 2,
+                "row": 30
             }
         ]
     }
