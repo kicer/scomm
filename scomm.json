@@ -26,8 +26,8 @@
             "row": 3
         },
         {
-            "name":"btn-sendfile",
-            "text":"发送文件",
+            "name":"btn-savefile",
+            "text":"保存文件",
             "column": 1,
             "row": 4
         },
@@ -186,7 +186,7 @@
             "row": 6
         }
     ],
-    "Text":{
+    "ScrolledText":{
         "name":"text-recv",
         "bg":"#cccccc",
         "column": 1,

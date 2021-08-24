@@ -3,9 +3,11 @@
 import os,sys,json
 import serial
 import serial.tools.list_ports
-import tkgen.gengui
 import tkinter
 import threading
+import tkgen.gengui
+import tkinter.scrolledtext
+import tkinter.filedialog
 
 import time, datetime
 def tsnow():
@@ -33,31 +35,53 @@ class UIproc():
         self.ckbtn_time = self.root.get('ckbtn-time')
         self.text_recv = self.root.get('text-recv')
         self.entry_split = self.root.get('entry-split')
+        self.ckbtn_0d = self.root.get('ckbtn-0d')
+        self.ckbtn_0a = self.root.get('ckbtn-0a')
         self.lastRecvTicks = 0
         self.event_init()
     def getSendData(self):
         data = self.entry_sendText.var.get()
         encoding = self.entry_encoding.var.get()
-        return self.ckbtn_shex.var.get() and bytes.fromhex(data) or data.encode(encoding, 'ignore')
+        dat = self.ckbtn_shex.var.get() and bytes.fromhex(data) or data.encode(encoding, 'ignore')
+        dat += self.ckbtn_0d.var.get() and b'\r' or b''
+        dat += self.ckbtn_0a.var.get() and b'\n' or b''
+        return dat
     def dmesg(self, cate, data):
         text =  self.ckbtn_time.var.get() and '[%s]'%strnow() or ''
         encoding = self.entry_encoding.var.get()
         splitms = int(self.entry_split.var.get().replace('ms',''))
+        ts = tsnow()
+        _i0 = self.text_recv.index('end');bg,fg='','black'
         if cate == 'send' and self.ckbtn_sendshow.var.get():
             text += '> '
-            text += self.ckbtn_shex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
-            self.text_recv.insert('end', '\n'+text)
+            text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+            #self.log('todo: [%s] send insert start' % tsnow())
+            #self.text_recv.insert('end', '\n'+text)
+            text = '\n'+text
+            #self.log('todo: [%s] send insert ok' % tsnow())
             self.lastRecvTicks = 0
         elif cate == 'recv':
-            ts = tsnow()
             if(ts-self.lastRecvTicks>splitms):
                 text += '< '
                 text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
-                self.text_recv.insert('end', '\n'+text)
+                #self.log('todo: [%s] recv1 insert start' % tsnow())
+                #self.text_recv.insert('end', '\n'+text)
+                text = '\n'+text
+                #self.log('todo: [%s] recv1 insert ok' % tsnow())
             else:
                 text = self.ckbtn_rhex.var.get() and (' '+tohex(data)) or data.decode(encoding, 'ignore')
-                self.text_recv.insert('end', text)
+                #self.log('todo: [%s] recv2 insert start' % tsnow())
+                #self.text_recv.insert('end', text)
+                #self.log('todo: [%s] recv2 insert ok' % tsnow())
             self.lastRecvTicks = ts
+            bg,fg='','blue'
+        #self.text_recv.configure(state=tkinter.NORMAL)
+        self.text_recv.insert('end', text)
+        _i1 = self.text_recv.index('end')
+        self.text_recv.tag_add('%s'%ts, _i0, _i1)
+        self.text_recv.tag_config('%s'%ts,background=bg,foreground=fg)
+        self.text_recv.yview('end')
+        #self.text_recv.configure(state=tkinter.DISABLED)
     def serial_open(self):
         self.entry_baud.configure(state='disabled')
         self.combobox_port.configure(state='disabled')
@@ -84,6 +108,11 @@ class UIproc():
             self.combobox_port.set(_ports[-1])
     def clear_recvtext(self):
         self.text_recv.delete('1.0','end')
+    def save_recvtext(self):
+        f = tkinter.filedialog.asksaveasfile(mode='w', defaultextension='.txt', initialfile='scommlog-%s'%tsnow())
+        if f:
+            f.write(self.text_recv.get('1.0','end'))
+            f.close()
     def log(self, s):
         print('[sys.log]: %s'%s)
         self.label_status.var.set(str(s))
@@ -124,9 +153,8 @@ class SerComm():
             if True:
                 data = self.com.read(self.com.in_waiting)
                 if data:
-                    self.ui.log('recv1: %s' % strnow()) 
+                    self.ui.log('%s: recv %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
                     self.ui.dmesg('recv', data)
-                    self.ui.log('%s: receive: %s' % (self.com.port,str(data)))
                 time.sleep(0.050)
             #except Exception as e:
             else:
@@ -188,8 +216,8 @@ class SerComm():
     def clearWin(self):
         self.ui.clear_recvtext()
 
-    def sendFile(self):
-        pass
+    def saveFile(self):
+        self.ui.save_recvtext()
 
     def findSerialPort(self):
         self.port_list = list(serial.tools.list_ports.comports())
@@ -240,6 +268,7 @@ class TopWin():
 
 
 if __name__ == '__main__':
+    tkinter.ScrolledText = tkinter.scrolledtext.ScrolledText
     root = tkgen.gengui.TkJson('scomm.json', title='scomm串口调试助手')
     comm = SerComm(root)
     wm = TopWin(root)
@@ -291,7 +320,7 @@ if __name__ == '__main__':
     root.checkbox('ckbtn-cycle').set(0)
     root.checkbox('ckbtn-time').set(1)
     root.checkbox('ckbtn-sendshow').set(1)
-    root.entry('entry-split').set('50ms')
+    root.entry('entry-split').set('100ms')
     root.entry('entry-cycle').set('1000ms')
     root.entry('entry-baud').set('9600')
     root.entry('entry-encoding').set('gbk')
@@ -300,10 +329,11 @@ if __name__ == '__main__':
     root.button('btn-onoff', cmd=lambda:comm.openCloseSerial())
     root.button('btn-send', cmd=lambda:comm.sendData())
     root.button('btn-clear', cmd=lambda:comm.clearWin())
-    root.button('btn-sendfile', cmd=lambda:comm.sendFile())
+    root.button('btn-savefile', cmd=lambda:comm.saveFile())
     _stvar = tkinter.StringVar()
     root.label('label-status').textvariable=_stvar
     root.label('label-status').var =_stvar
+    #root.get('text-recv').configure(state=tkinter.DISABLED)
     # 其他设置
     root.configure(bg='#e8e8e8')
     root.lift() # 把主窗口置于最前面
