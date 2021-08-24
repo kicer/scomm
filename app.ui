@@ -34,8 +34,17 @@
         {
             "name":"btn-send",
             "text":"发送",
-            "column": 10,
-            "row": 6
+            "column": 8,
+            "row": 5
+        }
+    ],
+    "Label":[
+        {
+            "name":"empty-01",
+            "text":" ",
+            "column": 7,
+            "colweight": 1,
+            "row": 1
         }
     ],
     "Canvas":[
@@ -47,15 +56,6 @@
             "weight":0,
             "sticky":"w",
             "column": 6,
-            "row": 1
-        }
-    ],
-    "Label":[
-        {
-            "name":"empty-01",
-            "text":" ",
-            "column": 9,
-            "colweight": 1,
             "row": 1
         }
     ],
@@ -146,22 +146,22 @@
         {
             "name":"entry-sendText",
             "column": 1,
-            "columnspan": 9,
-            "row": 6
+            "columnspan": 7,
+            "row": 5
         }
     ],
     "ScrolledText":{
         "name":"text-recv",
         "bg":"#cccccc",
         "column": 1,
-        "columnspan": 9,
+        "columnspan": 7,
         "rowweight": 1,
         "row": 2
     },
     "Frame":{
         "name":"frame-opBtns",
         "row":2,
-        "column": 10,
+        "column": 8,
         "Label":[
             {
                 "name":"label-rscript",
