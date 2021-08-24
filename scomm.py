@@ -62,19 +62,28 @@ class UIproc():
             self.lastCursor = "end"
             self.lastRecvData = b''
         elif cate == 'recv':
+            _ic = 'end'
             if(ts-self.lastRecvTicks>splitms):
                 self.lastCursor = self.text_recv.index('end')
                 self.lastRecvData = data
                 text += '< '
                 text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
-                self.text_recv.insert('end', '\n'+text)
+                #self.text_recv.insert('end', '\n'+text)
+                #print('##### todo:recv1 = %sbytes'%len(data))
             else:
                 data = self.lastRecvData + data
+                self.lastRecvData = data
                 text += '< '
                 text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
-                _i0 = self.lastCursor
+                _i0 = self.lastCursor; _ic = _i0
                 self.text_recv.delete(_i0,'end')
-                self.text_recv.insert(_i0, '\n'+text)
+                #self.text_recv.insert(_i0, '\n'+text)
+                #print('##### todo:recv2 = %sbytes'%len(data))
+            for cb in self.root.unpack.values():
+                try:
+                    if cb: text += '\n[%s] %s'%(cb['title'],eval(cb['value'], {"data":data}))
+                except: pass
+            self.text_recv.insert(_ic, '\n'+text)
             self.lastRecvTicks = ts
             bg,fg='','blue'
         _i1 = self.text_recv.index('end')
@@ -152,12 +161,11 @@ class SerComm():
             if True:
                 data = self.com.read(self.com.in_waiting)
                 if data:
-                    self.ui.log('%s: recv %s bytes: %s...' % (self.com.port,len(data),str(data)[:-1]))
+                    self.ui.log('%s: recv %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
                     self.ui.dmesg('recv', data)
-                time.sleep(0.050)
+                time.sleep(0.01)
             #except Exception as e:
-            else:
-                self.ui.log('%s: receive trace: %s' % (self.com.port,str(e)))
+            #    self.ui.log('%s: receive trace: %s' % (self.com.port,str(e)))
 
     def sendData(self):
         #try:
@@ -170,7 +178,7 @@ class SerComm():
                     self.com.write(data)
                     self.sendCount += len(data)
                     self.ui.dmesg('send', data)
-                    self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:-1]))
+                    self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
                     # scheduled send
                     #if self.sendSettingsScheduledCheckBox.isChecked():
                     #    if not self.isScheduledSending:
@@ -252,8 +260,7 @@ class TopWin():
             self.root.get('ckbtn-shex').var.set(_cfg.get('hex') and 1 or 0)
             self.root.get('btn-send').invoke()
     def set_unpack(self, btn):
-        self.root.unpack[btn] = self.root.get(btn).var.get() and self.root.usercfg.get(btn,{}).get('value') or None
-        print(self.root.unpack)
+        self.root.unpack[btn] = self.root.get(btn).var.get() and self.root.usercfg.get(btn) or None
     def save_cfg(self, btn, dat):
         with open('usercfg.json', 'wb+') as f:
             self.root.usercfg[btn] = dat
