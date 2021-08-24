@@ -241,6 +241,9 @@ class SerComm():
 class TopWin():
     def __init__(self, root):
         self.root = root
+        self.WinData = None
+        self.WinPack = None
+        self.WinUnpack = None
     def set_send_data(self, btn):
         _cfg = self.root.usercfg.get(btn, {})
         if _cfg:
@@ -248,33 +251,71 @@ class TopWin():
             self.root.get('entry-sendText').var.set(val)
             self.root.get('ckbtn-shex').var.set(_cfg.get('hex') and 1 or 0)
             self.root.get('btn-send').invoke()
+    def set_pack(self, btn):
+        pass
+    def set_unpack(self, btn):
+        pass
+    def save_cfg(self, btn, dat):
+        with open('usercfg.json', 'wb+') as f:
+            self.root.usercfg[btn] = dat
+            encoding = self.root.get('entry-encoding').var.get()
+            f.write(json.dumps(self.root.usercfg,indent=4,sort_keys=True).encode(encoding,'ignore'))
     def win_data(self, event):
-        def _save_dfile():
-            pass
-        self.root.toplevel('data.json', title='预置数据').configure(bg='#e8e8e8')
+        def _save(w):
+            dat = {'title':self.root.get('entry-dfile').var.get()}
+            dat['value'] = self.root.get('text-dsetting').get('1.0','end -1 chars')
+            dat['hex'] = self.root.get('ckbtn-dhex').var.get() and 1 or 0
+            self.save_cfg(w, dat)
+            self.WinData.destroy()
+        if self.WinData: return
+        self.WinData = self.root.toplevel('data.ui', title='预置数据')
+        self.WinData.configure(bg='#e8e8e8')
         btn = event.widget._name
         _cfg = self.root.usercfg.get(btn, {})
         self.root.entry('entry-dfile').set(_cfg.get('title', btn))
         self.root.get('text-dsetting').insert('end', _cfg.get('value',''))
         self.root.checkbox('ckbtn-dhex').set(_cfg.get('hex') and 1 or 0)
-        self.root.button('btn-dsave', cmd=_save_dfile, focus=True)
+        self.root.button('btn-dsave', cmd=lambda x=btn:_save(x), focus=True)
         self.root.button('btn-dsend', cmd=lambda x=btn:self.set_send_data(x))
-    def win_pack(self, btn):
-        pass
-        #root.toplevel('pack.json', title='组帧脚本').configure(bg='#e8e8e8')
-    def win_unpack(self, btn):
-        pass
-        #root.toplevel('unpack.json', title='解析脚本').configure(bg='#e8e8e8')
+    def win_pack(self, event):
+        def _save(w):
+            dat = {'title':self.root.get('entry-pfile').var.get()}
+            dat['value'] = self.root.get('text-psetting').get('1.0','end -1 chars')
+            self.save_cfg(w,dat)
+            self.WinPack.destroy()
+        if self.WinPack: return
+        self.WinPack = self.root.toplevel('pack.ui', title='组帧脚本')
+        self.WinPack.configure(bg='#e8e8e8')
+        btn = event.widget._name
+        _cfg = self.root.usercfg.get(btn, {})
+        self.root.entry('entry-pfile').set(_cfg.get('title', btn))
+        self.root.get('text-psetting').insert('end', _cfg.get('value',''))
+        self.root.button('btn-psave', cmd=lambda x=btn:_save(x), focus=True)
+        self.root.button('btn-pexec', cmd=lambda x=btn:self.set_pack(x))
+    def win_unpack(self, event):
+        def _save(w):
+            dat = {'title':self.root.get('entry-ufile').var.get()}
+            dat['value'] = self.root.get('text-usetting').get('1.0','end -1 chars')
+            self.save_cfg(w,dat)
+            self.WinUnpack.destroy()
+        if self.WinUnpack: return
+        self.WinUnpack = self.root.toplevel('unpack.ui', title='解析脚本')
+        self.WinUnpack.configure(bg='#e8e8e8')
+        btn = event.widget._name
+        _cfg = self.root.usercfg.get(btn, {})
+        self.root.entry('entry-ufile').set(_cfg.get('title', btn))
+        self.root.get('text-usetting').insert('end', _cfg.get('value',''))
+        self.root.button('btn-usave', cmd=lambda x=btn:_save(x), focus=True)
+        self.root.button('btn-uexec', cmd=lambda x=btn:self.set_unpack(x))
 
 
 if __name__ == '__main__':
     tkinter.ScrolledText = tkinter.scrolledtext.ScrolledText
-    root = tkgen.gengui.TkJson('scomm.json', title='scomm串口调试助手')
+    root = tkgen.gengui.TkJson('app.ui', title='scomm串口调试助手')
     comm = SerComm(root)
     wm = TopWin(root)
     # 读取用户数据文件
-    cfg_file = 'app.json'
-    root.usercfg = json.load(open(cfg_file)) if os.path.isfile(cfg_file) else {}
+    root.usercfg = json.load(open('usercfg.json')) if os.path.isfile('usercfg.json') else {}
     # 预置数据回调函数
     for i in range(10):
         name = 'btn-data%02d'%(i+1)
@@ -293,7 +334,9 @@ if __name__ == '__main__':
         name = 'btn-pack%02d'%(i+1)
         try:
             btn = root.get(name)
-            root.button(name, lambda x=name: wm.win_pack(root,x))
+            root.button(name, lambda x=name: wm.set_pack(x))
+            btn.bind('<Button-2>', wm.win_pack)
+            btn.bind('<Button-3>', wm.win_pack)
             _cfg = root.usercfg.get(name)
             if _cfg and btn:
                 btn.config(text=_cfg.get('title',name))
@@ -304,7 +347,9 @@ if __name__ == '__main__':
         name = 'btn-unpack%02d'%(i+1)
         try:
             btn = root.get(name)
-            root.button(name, lambda x=name: wm.win_unpack(root,x))
+            root.button(name, lambda x=name: wm.set_unpack(x))
+            btn.bind('<Button-2>', wm.win_unpack)
+            btn.bind('<Button-3>', wm.win_unpack)
             _cfg = root.usercfg.get(name)
             if _cfg and btn:
                 btn.config(text=_cfg.get('title',name))

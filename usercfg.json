@@ -1,0 +1,29 @@
+{
+    "btn-data01": {
+        "hex": 0,
+        "title": "\u63e1\u624b\u5305",
+        "value": "hello"
+    },
+    "btn-data02": {
+        "hex": 1,
+        "title": "HEX\u6d4b\u8bd5",
+        "value": "01 02 03 04 05"
+    },
+    "btn-data03": {
+        "hex": 0,
+        "title": "\u4e2d\u6587\u6d4b\u8bd5",
+        "value": "\u4e3e\u676f\u9080\u660e\u6708"
+    },
+    "btn-pack01": {
+        "title": "btn-pack01",
+        "value": ""
+    },
+    "btn-pack03": {
+        "title": "btn-pack03",
+        "value": ""
+    },
+    "btn-unpack01": {
+        "title": "btn-unpack01",
+        "value": ""
+    }
+}
