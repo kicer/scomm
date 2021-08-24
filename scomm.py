@@ -32,7 +32,8 @@ class UIproc():
         self.ckbtn_sendshow = self.root.get('ckbtn-sendshow')
         self.ckbtn_time = self.root.get('ckbtn-time')
         self.text_recv = self.root.get('text-recv')
-        self.lastTicks = tsnow()
+        self.entry_split = self.root.get('entry-split')
+        self.lastRecvTicks = 0
         self.event_init()
     def getSendData(self):
         data = self.entry_sendText.var.get()
@@ -41,23 +42,32 @@ class UIproc():
     def dmesg(self, cate, data):
         text =  self.ckbtn_time.var.get() and '[%s]'%strnow() or ''
         encoding = self.entry_encoding.var.get()
+        splitms = int(self.entry_split.var.get().replace('ms',''))
         if cate == 'send' and self.ckbtn_sendshow.var.get():
             text += '> '
             text += self.ckbtn_shex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+            self.text_recv.insert('end', '\n'+text)
+            self.lastRecvTicks = 0
         elif cate == 'recv':
-            text += '< '
-            text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
-        self.text_recv.insert('end', text+'\n')
+            ts = tsnow()
+            if(ts-self.lastRecvTicks>splitms):
+                text += '< '
+                text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+                self.text_recv.insert('end', '\n'+text)
+            else:
+                text = self.ckbtn_rhex.var.get() and (' '+tohex(data)) or data.decode(encoding, 'ignore')
+                self.text_recv.insert('end', text)
+            self.lastRecvTicks = ts
     def serial_open(self):
         self.entry_baud.configure(state='disabled')
         self.combobox_port.configure(state='disabled')
         self.btn_onoff.configure(text='关闭串口')
-        root.get('canvas-led').create_oval(4,4,19,19,fill='green')
+        self.canvas_led.create_oval(4,4,19,19,fill='green')
     def serial_close(self):
         self.entry_baud.configure(state='normal')
         self.combobox_port.configure(state='normal')
         self.btn_onoff.configure(text='打开串口')
-        root.get('canvas-led').create_oval(4,4,19,19,fill='red')
+        self.canvas_led.create_oval(4,4,19,19,fill='red')
     def read_serial_port(self):
         return self.combobox_port.get()
     def read_serial_baud(self):
@@ -72,6 +82,8 @@ class UIproc():
             self.combobox_port.set(currText)
         else:
             self.combobox_port.set(_ports[-1])
+    def clear_recvtext(self):
+        self.text_recv.delete('1.0','end')
     def log(self, s):
         print('[sys.log]: %s'%s)
         self.label_status.var.set(str(s))
@@ -107,13 +119,19 @@ class SerComm():
         t.start()
 
     def receiveData(self):
-        try:
-            while not self.receiveProgressStop:
-                data = self.com.read(self.com.in_waiting or 1)
+        while not self.receiveProgressStop:
+            #try:
+            if True:
+                data = self.com.read(self.com.in_waiting)
                 if data:
+                    self.ui.log('recv1: %s' % strnow()) 
                     self.ui.dmesg('recv', data)
-        except Exception as e:
-            self.ui.log('%s: receive trace: %s' % (self.com.port,str(e)))
+                    self.ui.log('%s: receive: %s' % (self.com.port,str(data)))
+                    self.ui.log('recv2: %s' % strnow()) 
+                time.sleep(0.050)
+            #except Exception as e:
+            else:
+                self.ui.log('%s: receive trace: %s' % (self.com.port,str(e)))
 
     def sendData(self):
         #try:
@@ -150,10 +168,13 @@ class SerComm():
                     self.com.bytesize = 8
                     self.com.parity = 'N'
                     self.com.stopbits = 1
-                    self.com.timeout = None
+                    self.com.timeout = 0
+                    self.com.write_timeout = 0
+                    self.com.inter_byte_timeout = 0
                     self.com.open()
                     self.ui.serial_open()
                     self.ui.log('%s: open success' % self.com.port)
+                    self.receiveProgressStop = False
                     self.receiveProcess = threading.Thread(target=self.receiveData)
                     self.receiveProcess.setDaemon(True)
                     self.receiveProcess.start()
@@ -164,6 +185,12 @@ class SerComm():
                     self.ui.log('%s: open failed: %s' % (self.com.port,str(e)))
         except Exception as e:
             self.ui.log('%s: openClose trace: %s' % (self.com.port,str(e)))
+
+    def clearWin(self):
+        self.ui.clear_recvtext()
+
+    def sendFile(self):
+        pass
 
     def findSerialPort(self):
         self.port_list = list(serial.tools.list_ports.comports())
@@ -273,6 +300,8 @@ if __name__ == '__main__':
     root.button('btn-scan', cmd=lambda:comm.detectSerialPort())
     root.button('btn-onoff', cmd=lambda:comm.openCloseSerial())
     root.button('btn-send', cmd=lambda:comm.sendData())
+    root.button('btn-clear', cmd=lambda:comm.clearWin())
+    root.button('btn-sendfile', cmd=lambda:comm.sendFile())
     _stvar = tkinter.StringVar()
     root.label('label-status').textvariable=_stvar
     root.label('label-status').var =_stvar
