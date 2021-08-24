@@ -275,12 +275,6 @@
                 "text":"data-09",
                 "column": 2,
                 "row": 29
-            },
-            {
-                "name":"btn-data10",
-                "text":"data-10",
-                "column": 2,
-                "row": 30
             }
         ]
     }

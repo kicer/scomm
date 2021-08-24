@@ -23,6 +23,7 @@ python3 scomm.py
 * python3.x
 * tkinter
 * pyserial
+* pyyaml
 
 
 ## 解析脚本

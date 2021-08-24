@@ -9,6 +9,9 @@ import tkgen.gengui
 import tkinter.scrolledtext
 import tkinter.filedialog
 
+import _locale
+_locale._getdefaultlocate = (lambda *args: ['zh_CN', 'utf8'])
+
 import time, datetime
 def tsnow():
     return int(time.time()*1000)
@@ -105,7 +108,7 @@ class UIproc():
         self.entry_baud.configure(state='disabled')
         self.combobox_port.configure(state='disabled')
         self.btn_onoff.configure(text='关闭串口')
-        self.canvas_led.create_oval(4,4,19,19,fill='green')
+        self.canvas_led.create_oval(4,4,19,19,fill='lightgreen')
     def serial_close(self):
         self.entry_baud.configure(state='normal')
         self.combobox_port.configure(state='normal')
@@ -140,7 +143,7 @@ class UIproc():
         return False
     def log(self, s):
         print('[sys.log]: %s'%s)
-        self.label_status.var.set(str(s))
+        self.label_status.var.set(len(str(s))>64 and (str(s)[:64]+' ...') or str(s))
     def event_init(self):
         self.combobox_port.bind("<<ComboboxSelected>>", lambda x:self.log(self.combobox_port.get()))
 
@@ -178,7 +181,7 @@ class SerComm():
                 if self.com.is_open:
                     data = self.com.read(self.com.in_waiting)
                     if data:
-                        self.ui.log('%s: recv %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
+                        self.ui.log('%s: recv %s bytes: %s' % (self.com.port,len(data),str(data)))
                         self.ui.dmesg('recv', data)
                     time.sleep(0.01)
                 else:
@@ -194,7 +197,7 @@ class SerComm():
                     if data and len(data) > 0:
                         self.com.write(data)
                         self.sendCount += len(data)
-                        self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
+                        self.ui.log('%s: send %s bytes: %s' % (self.com.port,len(data),str(data)))
                         self.ui.dmesg('send', data)
                 else:
                     time.sleep(1)
@@ -209,7 +212,7 @@ class SerComm():
             if data and len(data) > 0:
                 self.com.write(data)
                 self.sendCount += len(data)
-                self.ui.log('%s: send %s bytes: %s...' % (self.com.port,len(data),str(data)[:16]))
+                self.ui.log('%s: send %s bytes: %s' % (self.com.port,len(data),str(data)))
                 self.ui.dmesg('send', data)
 
     def openCloseSerialProcess(self):
@@ -246,9 +249,9 @@ class SerComm():
                     self.com.close()
                     self.ui.serial_close()
                     self.comProgressStop = True
-                    self.ui.log('%s: open failed: %s' % (self.com.port,str(e)))
+                    self.ui.log('%s: open failed' % (self.com.port))
         except Exception as e:
-            self.ui.log('%s: openClose trace: %s' % (self.com.port,str(e)))
+            self.ui.log('%s: openClose trace' % (self.com.port))
 
     def clearWin(self):
         self.ui.clear_recvtext()
