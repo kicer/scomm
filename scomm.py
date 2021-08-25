@@ -291,6 +291,9 @@ class TopWin():
         _cfg = self.root.usercfg.get(btn, {})
         if _cfg:
             val = _cfg.get('value')
+            try:
+                val = eval(val, {"data":self.root.get('entry-uservar').var.get().split(',')})
+            except: pass
             self.root.get('entry-sendText').var.set(val)
             self.root.get('ckbtn-shex').var.set(_cfg.get('hex') and 1 or 0)
             self.root.get('btn-send').invoke()
@@ -301,7 +304,6 @@ class TopWin():
             self.root.usercfg[btn] = dat
             encoding = self.root.get('entry-encoding').var.get()
             f.write(json.dumps(self.root.usercfg,indent=4,sort_keys=True).encode(encoding,'ignore'))
-            self.set_unpack(btn)
             self.root.get(btn).configure(text=dat.get('title'))
     def win_data(self, event):
         def _save(w):
@@ -324,6 +326,7 @@ class TopWin():
             dat = {'title':self.root.get('entry-ufile').var.get()}
             dat['value'] = self.root.get('text-usetting').get('1.0','end -1 chars')
             self.save_cfg(w,dat)
+            self.set_unpack(w)
             self.WinUnpack.destroy()
         if self.WinUnpack: self.WinUnpack.destroy()
         self.WinUnpack = self.root.toplevel('unpack.ui', title='解析脚本')
@@ -343,7 +346,7 @@ if __name__ == '__main__':
     # 读取用户数据文件
     root.usercfg = json.load(open('usercfg.json')) if os.path.isfile('usercfg.json') else {}
     # 预置数据回调函数
-    for i in range(10):
+    for i in range(20):
         name = 'btn-data%02d'%(i+1)
         try:
             btn = root.get(name)
@@ -357,7 +360,7 @@ if __name__ == '__main__':
             pass
     # 解析脚本回调函数
     var = tkinter.IntVar()
-    for i in range(10):
+    for i in range(20):
         name = 'btn-unpack%02d'%(i+1)
         try:
             btn = root.get(name)
@@ -385,6 +388,7 @@ if __name__ == '__main__':
     root.entry('entry-cycle').set('1024ms')
     root.entry('entry-baud').set('9600')
     root.entry('entry-encoding').set('gbk')
+    root.entry('entry-uservar').set('0')
     root.entry('entry-sendText', key='<Return>', cmd=lambda x:comm.sendData()).set('')
     root.button('btn-scan', cmd=lambda:comm.detectSerialPort())
     root.button('btn-onoff', cmd=lambda:comm.openCloseSerial())

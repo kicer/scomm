@@ -14,5 +14,5 @@ setup(
 	},
 	windows = [{ 'script':'scomm.py', 'icon_resources':[(1, 'app.ico')]}],
 	zipfile = None,
-	data_files = [('', ['usercfg.json','app.ui','unpack.ui','data.ui'])]
+	data_files = [('', ['usercfg.json','app.ui','unpack.ui','data.ui','README.md'])]
 )

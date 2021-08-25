@@ -175,15 +175,26 @@
                 "row": 20
             },
             {
+                "name":"label-uservar",
+                "text":"预置变量：",
+                "column": 2,
+                "row": 40
+            },
+            {
                 "name":"label-encoding",
                 "text":"数据编码：",
                 "column": 2,
-                "row": 40
+                "row": 42
             }
         ],
         "Entry":[
             {
                 "name":"entry-encoding",
+                "width":10,
+                "column": 2,
+                "row": 43
+            },{
+                "name":"entry-uservar",
                 "width":10,
                 "column": 2,
                 "row": 41
@@ -269,12 +280,6 @@
                 "text":"data-08",
                 "column": 2,
                 "row": 28
-            },
-            {
-                "name":"btn-data09",
-                "text":"data-09",
-                "column": 2,
-                "row": 29
             }
         ]
     }
