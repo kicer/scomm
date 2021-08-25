@@ -16,6 +16,10 @@
 ```bash
 # install python3
 python3 scomm.py
+
+# windows下安装py2exe可导出成exe文件
+# pip install pyyaml pyserial py2exe
+# python3 setup.py py2exe
 ```
 
 

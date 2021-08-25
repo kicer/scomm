@@ -10,7 +10,7 @@ import tkinter.scrolledtext
 import tkinter.filedialog
 
 import _locale
-_locale._getdefaultlocate = (lambda *args: ['zh_CN', 'utf8'])
+_locale._getdefaultlocale = (lambda *args: ['zh_CN', 'utf8'])
 
 import time, datetime
 def tsnow():
