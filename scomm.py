@@ -72,7 +72,7 @@ class UIproc():
             text += '> '
             text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
             _i0 = self.text_recv.index('end')
-            self.text_recv.insert('end', '\n'+text)
+            self.text_recv.insert('end', '\n%s'%text.translate({0:'<00>'}))
             self.lastRecvTicks = 0
             self.lastCursor = 'end'
             self.lastRecvData = b''
@@ -96,7 +96,7 @@ class UIproc():
                 except: pass
             self.text_recv.delete(_i0,'end')
             _i0 = self.text_recv.index('end')
-            self.text_recv.insert(_i0, '\n'+text)
+            self.text_recv.insert(_i0, '\n%s'%text.translate({0:'<00>'}))
             self.lastRecvTicks = ts
             fg='blue'
         _i1 = self.text_recv.index('end')
