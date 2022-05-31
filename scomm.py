@@ -44,17 +44,30 @@ class UIproc():
         self.lastRecvTicks = 0
         self.lastCursor = "end"
         self.lastRecvData = b''
-        self.wait_sendData = b''
+        self.wait_sendData = {'text':b'', 'rts':None, 'dtr':None}
         self._lock_dmesg = False
         self.event_init()
+    def setSendData(self, text=None, encoding=None, HEX=None, RTS=None, DTR=None):
+        if type(text) == type(''):
+            self.entry_sendText.var.set(text)
+        if type(encoding) == type(''):
+            self.entry_encoding.var.set(encoding)
+        if type(HEX) == type(1):
+            self.ckbtn_shex.var.set(HEX and 1 or 0)
+        self.wait_sendData['rts'] = RTS
+        self.wait_sendData['dtr'] = DTR
     def getSendData(self, cache=True):
         if not cache:
+            if self.root.pack:
+                self.log('send.data.pack:%s'%self.root.pack)
+                self.setSendData(**self.root.pack)
+                self.root.pack = None
             data = self.entry_sendText.var.get()
             encoding = self.entry_encoding.var.get()
             dat = self.ckbtn_shex.var.get() and bytes.fromhex(data) or data.encode(encoding, 'ignore')
             dat += self.ckbtn_0d.var.get() and b'\r' or b''
             dat += self.ckbtn_0a.var.get() and b'\n' or b''
-            self.wait_sendData = dat
+            self.wait_sendData['text'] = dat
         return self.wait_sendData
     def getSendDataLoop(self):
         while True:
@@ -193,7 +206,8 @@ class SerComm():
         while not self.comProgressStop:
             try:
                 if self.com.is_open and self.ui.send_waitting():
-                    data = self.ui.getSendData(cache=True)
+                    _data = self.ui.getSendData(cache=True)
+                    data = _data.get('text')
                     if data and len(data) > 0:
                         self.com.write(data)
                         self.sendCount += len(data)
@@ -208,7 +222,18 @@ class SerComm():
         if not self.com.is_open:
             self.ui.log('Serial Port not open')
         else:
-            data = self.ui.getSendData(cache=False)
+            _data = self.ui.getSendData(cache=False)
+            rts = _data.get('rts')
+            dtr = _data.get('dtr')
+            data = _data.get('text')
+            if type(rts) == type(True):
+                self.com.rts = rts
+                self.ui.log('%s: set rts=%s' % (self.com.port,rts))
+                self.ui.setSendData(RTS=None)
+            if type(dtr) == type(True):
+                self.com.dtr = dtr
+                self.ui.log('%s: set dtr=%s' % (self.com.port,dtr))
+                self.ui.setSendData(DTR=None)
             if data and len(data) > 0:
                 self.com.write(data)
                 self.sendCount += len(data)
@@ -284,6 +309,7 @@ class TopWin():
     def __init__(self, root):
         self.root = root
         self.root.unpack = {}
+        self.root.pack = None
         self.WinData = None
         self.WinPack = None
         self.WinUnpack = None
@@ -294,8 +320,18 @@ class TopWin():
             try:
                 val = eval(val, {"data":self.root.get('entry-uservar').var.get().split(',')})
             except: pass
-            self.root.get('entry-sendText').var.set(val)
-            self.root.get('ckbtn-shex').var.set(_cfg.get('hex') and 1 or 0)
+            if type(val) == type({}):
+                self.root.pack = {
+                        'text':val.get('text'),
+                        'encoding':val.get('encoding'),
+                        'HEX':val.get('hex')
+                }
+                if 'rts' in val:
+                    self.root.pack['RTS'] = bool(val.get('rts'))
+                if 'dtr' in val:
+                    self.root.pack['DTR'] = bool(val.get('dtr'))
+            else:
+                self.root.pack = {'text':val,'HEX':_cfg.get('hex')}
             self.root.get('btn-send').invoke()
     def set_unpack(self, btn):
         self.root.unpack[btn] = self.root.get(btn).var.get() and self.root.usercfg.get(btn) or None
