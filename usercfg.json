@@ -1,4 +1,5 @@
 {
+    "baud": "9600",
     "btn-data01": {
         "hex": 0,
         "title": "\u63e1\u624b\u5305",
@@ -31,5 +32,9 @@
     "btn-unpack02": {
         "title": "C style print",
         "value": "'\\\\x'+'\\\\x'.join('%02x'%x for x in data)"
-    }
+    },
+    "cycle": "10",
+    "encoding": "gbk",
+    "split": "99ms",
+    "uservar": ""
 }

@@ -47,6 +47,7 @@ class UIproc():
         self.wait_sendData = {'text':b'', 'rts':None, 'dtr':None}
         self._lock_dmesg = False
         self.event_init()
+        self.dmesg_buff = []
     def setSendData(self, text=None, encoding=None, HEX=None, RTS=None, DTR=None):
         if type(text) == type(''):
             self.entry_sendText.var.set(text)
@@ -74,7 +75,10 @@ class UIproc():
             self.getSendData(cache=False)
             time.sleep(1)
     def dmesg(self, cate, data):
-        while self._lock_dmesg: time.sleep(0.01)
+        while self._dmesg(cate, data):
+            time.sleep(0.1)
+    def _dmesg(self, cate, data):
+        if self._lock_dmesg: return True
         self._lock_dmesg = True
         text =  self.ckbtn_time.var.get() and '[%s]'%strnow() or ''
         encoding = self.entry_encoding.var.get()
@@ -117,6 +121,7 @@ class UIproc():
         self.text_recv.tag_config('%s'%ts,foreground=fg)
         self.text_recv.yview('end')
         self._lock_dmesg = False
+        return False
     def serial_open(self):
         self.entry_baud.configure(state='disabled')
         self.combobox_port.configure(state='disabled')
@@ -157,6 +162,14 @@ class UIproc():
     def log(self, s):
         print('[sys.log]: %s'%s)
         self.label_status.var.set(len(str(s))>64 and (str(s)[:64]+' ...') or str(s))
+    def save_cfg(self, dt):
+        if type(dt) == type(''):
+            dt = (dt.split('-')[-1], self.root.get(dt).var.get())
+            if self.root.usercfg.get(dt[0]) == dt[1]: return
+        with open('usercfg.json', 'wb+') as f:
+            self.root.usercfg[dt[0]] = dt[1]
+            encoding = self.root.get('entry-encoding').var.get()
+            f.write(json.dumps(self.root.usercfg,indent=4,sort_keys=True).encode(encoding,'ignore'))
     def event_init(self):
         self.combobox_port.bind("<<ComboboxSelected>>", lambda x:self.log(self.combobox_port.get()))
 
@@ -270,6 +283,12 @@ class SerComm():
                     self.sendProcess = threading.Thread(target=self.ui.getSendDataLoop)
                     self.sendProcess.setDaemon(True)
                     self.sendProcess.start()
+                    # save usercfg
+                    self.ui.save_cfg('entry-split')
+                    self.ui.save_cfg('entry-cycle')
+                    self.ui.save_cfg('entry-baud')
+                    self.ui.save_cfg('entry-encoding')
+                    self.ui.save_cfg('entry-uservar')
                 except Exception as e:
                     self.com.close()
                     self.ui.serial_close()
@@ -335,18 +354,15 @@ class TopWin():
             self.root.get('btn-send').invoke()
     def set_unpack(self, btn):
         self.root.unpack[btn] = self.root.get(btn).var.get() and self.root.usercfg.get(btn) or None
-    def save_cfg(self, btn, dat):
-        with open('usercfg.json', 'wb+') as f:
-            self.root.usercfg[btn] = dat
-            encoding = self.root.get('entry-encoding').var.get()
-            f.write(json.dumps(self.root.usercfg,indent=4,sort_keys=True).encode(encoding,'ignore'))
-            self.root.get(btn).configure(text=dat.get('title'))
+    def save_cfg(btn, dat):
+        self.root.save_cfg((btn,dat))
+        self.root.get(btn).configure(text=dat.get('title'))
     def win_data(self, event):
         def _save(w):
             dat = {'title':self.root.get('entry-dfile').var.get()}
             dat['value'] = self.root.get('text-dsetting').get('1.0','end -1 chars')
             dat['hex'] = self.root.get('ckbtn-dhex').var.get() and 1 or 0
-            self.save_cfg(w, dat)
+            self.save_cfg(w,dat)
             self.WinData.destroy()
         if self.WinData: self.WinData.destroy()
         self.WinData = self.root.toplevel('data.ui', title='预置数据')
@@ -420,11 +436,11 @@ if __name__ == '__main__':
     root.checkbox('ckbtn-cycle').set(0)
     root.checkbox('ckbtn-time').set(1)
     root.checkbox('ckbtn-sendshow').set(1)
-    root.entry('entry-split').set('99ms')
-    root.entry('entry-cycle').set('1024ms')
-    root.entry('entry-baud').set('9600')
-    root.entry('entry-encoding').set('gbk')
-    root.entry('entry-uservar').set('0')
+    root.entry('entry-split').set(root.usercfg.get('split','99ms'))
+    root.entry('entry-cycle').set(root.usercfg.get('cycle','1024ms'))
+    root.entry('entry-baud').set(root.usercfg.get('baud','9600'))
+    root.entry('entry-encoding').set(root.usercfg.get('encoding','gbk'))
+    root.entry('entry-uservar').set(root.usercfg.get('uservar',''))
     root.entry('entry-sendText', key='<Return>', cmd=lambda x:comm.sendData()).set('')
     root.button('btn-scan', cmd=lambda:comm.detectSerialPort())
     root.button('btn-onoff', cmd=lambda:comm.openCloseSerial())
