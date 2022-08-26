@@ -354,7 +354,7 @@ class TopWin():
             self.root.get('btn-send').invoke()
     def set_unpack(self, btn):
         self.root.unpack[btn] = self.root.get(btn).var.get() and self.root.usercfg.get(btn) or None
-    def save_cfg(btn, dat):
+    def save_cfg(self, btn, dat):
         self.root.save_cfg((btn,dat))
         self.root.get(btn).configure(text=dat.get('title'))
     def win_data(self, event):
@@ -397,6 +397,7 @@ if __name__ == '__main__':
     wm = TopWin(root)
     # 读取用户数据文件
     root.usercfg = json.load(open('usercfg.json')) if os.path.isfile('usercfg.json') else {}
+    root.save_cfg = comm.ui.save_cfg
     # 预置数据回调函数
     for i in range(20):
         name = 'btn-data%02d'%(i+1)
