@@ -75,18 +75,24 @@ class UIproc():
             self.getSendData(cache=False)
             time.sleep(1)
     def dmesg(self, cate, data):
+        _err = 0
         while self._dmesg(cate, data):
             time.sleep(0.1)
+            _err += 1
+            if _err > 10:
+                self.log('dmesg hang:[%s] %s'%(cate, str(data)))
+                break
     def _dmesg(self, cate, data):
         if self._lock_dmesg: return True
         self._lock_dmesg = True
-        text =  self.ckbtn_time.var.get() and '[%s]'%strnow() or ''
+        MARK = lambda x:self.ckbtn_time.var.get() and x or ''
+        text = MARK('[%s]'%strnow())
         encoding = self.entry_encoding.var.get()
         splitms = self.ckbtn_split.var.get() and int(self.entry_split.var.get().replace('ms','')) or 0
         ts = tsnow()
         _i0,fg='end','black'
         if cate == 'send' and self.ckbtn_sendshow.var.get():
-            text += '> '
+            text += MARK('> ')
             text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
             _i0 = self.text_recv.index('end')
             self.text_recv.insert('end', '\n%s'%text.translate({0:'<00>'}))
@@ -97,13 +103,13 @@ class UIproc():
             if(ts-self.lastRecvTicks>splitms):
                 self.lastCursor = self.text_recv.index('end')
                 self.lastRecvData = data
-                text += '< '
+                text += MARK('< ')
                 text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
                 #self.text_recv.insert('end', '\n'+text)
             else:
                 data = self.lastRecvData + data
                 self.lastRecvData = data
-                text += '< '
+                text += MARK('< ')
                 text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
                 _i0 = self.lastCursor
                 #self.text_recv.insert(_i0, '\n'+text)
@@ -271,6 +277,8 @@ class SerComm():
                     self.com.write_timeout = 0
                     self.com.inter_byte_timeout = 0
                     self.com.open()
+                    self.com.reset_input_buffer()
+                    self.com.reset_output_buffer()
                     self.ui.serial_open()
                     self.ui.log('%s: open success' % self.com.port)
                     self.comProgressStop = False
