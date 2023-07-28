@@ -20,6 +20,12 @@ def strnow():
 def tohex(b):
     return ' '.join(['%02X'%x for x in b])
 
+def uint16(b):
+    return b[0]*256+b[1]
+def int16(b):
+    d = (b[0]*256+b[1])
+    return d>=0x80 and (d-0x10000) or d
+
 class UIproc():
     def __init__(self, app):
         self.root = app
@@ -115,7 +121,7 @@ class UIproc():
                 #self.text_recv.insert(_i0, '\n'+text)
             for cb in self.root.unpack.values():
                 try:
-                    if cb: text += '\n[%s] %s'%(cb['title'],eval(cb['value'], {"data":data}))
+                    if cb: text += eval(cb['value'],{'data':data, 'uint16':uint16,'int16':int16}) or ''
                 except: pass
             self.text_recv.delete(_i0,'end')
             _i0 = self.text_recv.index('end')
@@ -208,6 +214,7 @@ class SerComm():
         t.start()
 
     def receiveDataLoop(self):
+        self.com.flush()
         while not self.comProgressStop:
             try:
                 if self.com.is_open:
@@ -215,7 +222,7 @@ class SerComm():
                     if data:
                         self.ui.log('%s: recv %s bytes: %s' % (self.com.port,len(data),str(data)))
                         self.ui.dmesg('recv', data)
-                    time.sleep(0.01)
+                    time.sleep(0.05)
                 else:
                     time.sleep(1)
             except Exception as e:
@@ -277,8 +284,6 @@ class SerComm():
                     self.com.write_timeout = 0
                     self.com.inter_byte_timeout = 0
                     self.com.open()
-                    self.com.reset_input_buffer()
-                    self.com.reset_output_buffer()
                     self.ui.serial_open()
                     self.ui.log('%s: open success' % self.com.port)
                     self.comProgressStop = False

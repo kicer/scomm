@@ -1,19 +1,19 @@
 {
     "baud": "9600",
     "btn-data01": {
-        "hex": 0,
-        "title": "\u63e1\u624b\u5305",
-        "value": "hello"
+        "hex": 1,
+        "title": "fan on",
+        "value": "01 10 30 12 00 01 02 00 01 54 E1"
     },
     "btn-data02": {
         "hex": 1,
-        "title": "HEX\u6d4b\u8bd5",
-        "value": "01 02 03 04 05"
+        "title": "fan off",
+        "value": "01 10 30 12 00 01 02 00 02 14 E0"
     },
     "btn-data03": {
-        "hex": 0,
-        "title": "\u4e2d\u6587\u6d4b\u8bd5",
-        "value": "\u82b1\u95f4\u4e00\u58f6\u9152\uff0c\u72ec\u914c\u65e0\u76f8\u4eb2\u3002\n\u4e3e\u676f\u9080\u660e\u6708\uff0c\u5bf9\u5f71\u6210\u4e09\u4eba\u3002\n\u6708\u65e2\u4e0d\u89e3\u996e\uff0c\u5f71\u5f92\u968f\u6211\u8eab\u3002\n\u6682\u4f34\u6708\u5c06\u5f71\uff0c\u884c\u4e50\u987b\u53ca\u6625\u3002\n\u6211\u6b4c\u6708\u5f98\u5f8a\uff0c\u6211\u821e\u5f71\u96f6\u4e71\u3002\n\u9192\u65f6\u76f8\u4ea4\u6b22\uff0c\u9189\u540e\u5404\u5206\u6563\u3002\n\u6c38\u7ed3\u65e0\u60c5\u6e38\uff0c\u76f8\u671f\u9088\u4e91\u6c49\u3002"
+        "hex": 1,
+        "title": "reboot",
+        "value": "01 10 30 11 00 01 02 00 01 54 D2"
     },
     "btn-data04": {
         "hex": 0,
@@ -25,6 +25,21 @@
         "title": "reset RTS",
         "value": "{\"rts\":1,\"text\":\"\"}"
     },
+    "btn-data06": {
+        "hex": 1,
+        "title": "silent",
+        "value": "01 10 30 03 00 01 02 00 00 96 60"
+    },
+    "btn-data07": {
+        "hex": 1,
+        "title": "read.cfg",
+        "value": "01 03 30 00 00 16 5A EE"
+    },
+    "btn-data08": {
+        "hex": 1,
+        "title": "auto report",
+        "value": "01 10 30 03 00 01 02 00 01 57 A0"
+    },
     "btn-unpack01": {
         "title": "HEX print",
         "value": "' '.join(['%02X'%x for x in data])"
@@ -33,8 +48,16 @@
         "title": "C style print",
         "value": "'\\\\x'+'\\\\x'.join('%02x'%x for x in data)"
     },
-    "cycle": "10",
+    "btn-unpack03": {
+        "title": "hex2dec[-3:-2]",
+        "value": "len(data)==26 and '\\t['+'%5d' % (data[-2]*256+data[-3])+']'"
+    },
+    "btn-unpack05": {
+        "title": "s17-eeprom",
+        "value": "'\\nad0fix=%s\\n' % (uint16(data[17:]))"
+    },
+    "cycle": "100",
     "encoding": "gbk",
-    "split": "99ms",
+    "split": "500",
     "uservar": ""
 }
