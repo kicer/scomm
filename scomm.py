@@ -24,7 +24,7 @@ def uint16(b):
     return b[0]*256+b[1]
 def int16(b):
     d = (b[0]*256+b[1])
-    return d>=0x80 and (d-0x10000) or d
+    return d>=0x8000 and (d-0x10000) or d
 
 class UIproc():
     def __init__(self, app):
@@ -214,7 +214,8 @@ class SerComm():
         t.start()
 
     def receiveDataLoop(self):
-        self.com.flush()
+        while self.com.in_waiting > 0:
+            self.com.read(self.com.in_waiting)
         while not self.comProgressStop:
             try:
                 if self.com.is_open:
