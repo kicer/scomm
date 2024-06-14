@@ -78,7 +78,10 @@ class UIproc():
         return self.wait_sendData
     def getSendDataLoop(self):
         while True:
-            self.getSendData(cache=False)
+            try:
+                self.getSendData(cache=False)
+            except:
+                pass
             time.sleep(1)
     def dmesg(self, cate, data):
         _err = 0
@@ -99,7 +102,7 @@ class UIproc():
         _i0,fg='end','black'
         if cate == 'send' and self.ckbtn_sendshow.var.get():
             text += MARK('> ')
-            text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+            text += self.ckbtn_shex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
             _i0 = self.text_recv.index('end')
             self.text_recv.insert('end', '\n%s'%text.translate({0:'<00>'}))
             self.lastRecvTicks = 0
