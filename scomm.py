@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import os,sys,json
+import os,sys,json,string
 import serial
 import serial.tools.list_ports
 import tkinter
@@ -19,6 +19,8 @@ def strnow():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 def tohex(b):
     return ' '.join(['%02X'%x for x in b])
+def human_string(data, is_hex=False, encoding=False):
+    return is_hex and tohex(data) or data.decode(encoding,'ignore')
 
 def uint16(b):
     return b[0]*256+b[1]
@@ -102,7 +104,7 @@ class UIproc():
         _i0,fg='end','black'
         if cate == 'send' and self.ckbtn_sendshow.var.get():
             text += MARK('> ')
-            text += self.ckbtn_shex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+            text += human_string(data, self.ckbtn_shex.var.get(), encoding)
             _i0 = self.text_recv.index('end')
             self.text_recv.insert('end', '\n%s'%text.translate({0:'<00>'}))
             self.lastRecvTicks = 0
@@ -113,13 +115,13 @@ class UIproc():
                 self.lastCursor = self.text_recv.index('end')
                 self.lastRecvData = data
                 text += MARK('< ')
-                text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+                text += human_string(data, self.ckbtn_rhex.var.get(), encoding)
                 #self.text_recv.insert('end', '\n'+text)
             else:
                 data = self.lastRecvData + data
                 self.lastRecvData = data
                 text += MARK('< ')
-                text += self.ckbtn_rhex.var.get() and tohex(data) or data.decode(encoding, 'ignore')
+                text += human_string(data, self.ckbtn_rhex.var.get(), encoding)
                 _i0 = self.lastCursor
                 #self.text_recv.insert(_i0, '\n'+text)
             for cb in self.root.unpack.values():
@@ -128,7 +130,7 @@ class UIproc():
                 except: pass
             self.text_recv.delete(_i0,'end')
             _i0 = self.text_recv.index('end')
-            self.text_recv.insert(_i0, '\n%s'%text.translate({0:'<00>'}))
+            self.text_recv.insert(_i0, '\n%s'%str(text))
             self.lastRecvTicks = ts
             fg='blue'
         _i1 = self.text_recv.index('end')
@@ -315,7 +317,12 @@ class SerComm():
             self.ui.log('%s: openClose trace' % (self.com.port))
 
     def clearWin(self):
-        self.ui.clear_recvtext()
+        if self.com.is_open:
+            self.com.is_open = False
+            self.ui.clear_recvtext()
+            self.com.is_open = True
+        else:
+            self.ui.clear_recvtext()
 
     def saveFile(self):
         self.ui.save_recvtext()
@@ -457,7 +464,7 @@ if __name__ == '__main__':
     root.entry('entry-split').set(root.usercfg.get('split','99ms'))
     root.entry('entry-cycle').set(root.usercfg.get('cycle','1024ms'))
     root.entry('entry-baud').set(root.usercfg.get('baud','9600'))
-    root.entry('entry-encoding').set(root.usercfg.get('encoding','gbk'))
+    root.entry('entry-encoding').set(root.usercfg.get('encoding','utf8'))
     root.entry('entry-uservar').set(root.usercfg.get('uservar',''))
     root.entry('entry-sendText', key='<Return>', cmd=lambda x:comm.sendData()).set('')
     root.button('btn-scan', cmd=lambda:comm.detectSerialPort())
