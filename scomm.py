@@ -645,7 +645,7 @@ class TopWindow:
 
     def save_config(self, btn_name: str, data: Dict[str, Any]):
         """保存配置"""
-        self.root.save_cfg((btn_name, data))
+        self.root.save_cfg(btn_name, data)
         self.root.get(btn_name).configure(text=data.get('title', btn_name))
 
     def show_data_window(self, event):
