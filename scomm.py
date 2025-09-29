@@ -503,11 +503,10 @@ class SerialCommunicator:
                     cycle_interval = self.ui.get_cycle_interval()
 
                     # 使用 Event.wait 代替 sleep，可以及时响应停止事件
-                    # 等待指定的间隔时间，如果在此期间running被清除，则立即退出
-                    if not self.running.wait(cycle_interval):
-                        # 如果等待超时（返回False），说明running仍然设置，可以发送数据
-                        self._send_data()
-                    # 如果wait返回True，说明running被清除，循环条件会失败，退出循环
+                    self.data_ready.wait(cycle_interval)
+                    self._send_data()
+                    if self.data_ready.is_set():
+                        self.data_ready.clear()
                 else:
                     # 等待数据准备好或停止事件，最多等待100ms
                     self.data_ready.wait(0.1)

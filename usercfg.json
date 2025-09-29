@@ -2,17 +2,17 @@
     "baud": "9600",
     "btn-data01": {
         "hex": 1,
-        "title": "\u5355\u8138\u5f55\u5165",
+        "title": "单脸录入",
         "value": "5A A5 0A A1 A5 10 10 00 04 1D 01 00 0A EE EE"
     },
     "btn-data02": {
         "hex": 1,
-        "title": "\u8bfb\u53d6\u4eba\u8138",
+        "title": "读取人脸",
         "value": "5A A5 07 A1 A5 10 10 00 01 24 EE EE"
     },
     "btn-data03": {
         "hex": 1,
-        "title": "\u4eba\u8138\u8bc6\u522b",
+        "title": "人脸识别",
         "value": "5A A5 09 A1 A5 10 10 00 03 12 00 0A EE EE"
     },
     "btn-data04": {
@@ -27,17 +27,17 @@
     },
     "btn-data06": {
         "hex": 1,
-        "title": "\u5220\u9664\u4eba\u8138",
+        "title": "删除人脸",
         "value": "5A A5 09 A1 A5 10 10 00 03 20 00 01 EE EE"
     },
     "btn-data07": {
         "hex": 1,
-        "title": "\u83b7\u53d6\u72b6\u6001",
+        "title": "获取状态",
         "value": "5A A5 07 A1 A5 10 10 00 01 11 EE EE"
     },
     "btn-data08": {
         "hex": 1,
-        "title": "\u5173\u6389\u7535\u6e90",
+        "title": "关掉电源",
         "value": "5A A5 07 A1 A5 10 10 00 01 F3 EE EE"
     },
     "btn-unpack01": {
@@ -60,7 +60,7 @@
         "title": "tc01-sens-cfg",
         "value": "len(data)>=25 and data[2]==0x14 and '\\n\\K=%s\\nKuser=%s\\nad0fix=%s\\nmlevel=%s\\nfofactor=%s\\nKntc=%s\\n' % (\nuint16(data[9:]),\nuint16(data[11:]),\nuint16(data[13:]),\nuint16(data[15:]),\nuint16(data[17:]),\nuint16(data[19:]))\n\n"
     },
-    "cycle": "1000",
+    "cycle": "100",
     "encoding": "utf8",
     "split": "100",
     "uservar": "2,32200,0,0"
