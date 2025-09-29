@@ -222,6 +222,10 @@ class UIProcessor:
             else:  # recv
                 prefix = "< " if self.ckbtn_time.var.get() else ""
                 content = human_string(data, self.ckbtn_rhex.var.get(), encoding)
+                for cb in self.root.unpack.values():
+                    try:
+                        if cb: content += eval(cb['value'],{'data':data, 'uint16':uint16,'int16':int16}) or ''
+                    except: pass
 
             message = f"\n{timestamp}{prefix}{content}"
             self.text_handler.put_message(message)

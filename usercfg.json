@@ -31,9 +31,9 @@
         "value": "5A A5 09 A1 A5 10 10 00 03 20 00 01 EE EE"
     },
     "btn-data07": {
-        "hex": 1,
         "title": "获取状态",
-        "value": "5A A5 07 A1 A5 10 10 00 01 11 EE EE"
+        "value": "5A A5 07 A1 A5 10 10 00 01 11 EE EE",
+        "hex": 0
     },
     "btn-data08": {
         "hex": 1,
