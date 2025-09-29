@@ -2,18 +2,18 @@
     "baud": "9600",
     "btn-data01": {
         "hex": 1,
-        "title": "\u88ab\u52a8\u6a21\u5f0f",
-        "value": " 0A 00 35 00 02 04 02 06 01 44 18"
+        "title": "\u5355\u8138\u5f55\u5165",
+        "value": "5A A5 0A A1 A5 10 10 00 04 1D 01 00 0A EE EE"
     },
     "btn-data02": {
         "hex": 1,
-        "title": "\u5de1\u68c0\u6a21\u5f0f",
-        "value": "0A 00 35 01 02 04 02 06 01 6F 1C"
+        "title": "\u8bfb\u53d6\u4eba\u8138",
+        "value": "5A A5 07 A1 A5 10 10 00 01 24 EE EE"
     },
     "btn-data03": {
         "hex": 1,
-        "title": "F3\u5de1\u68c0",
-        "value": "5A A5 07 A2 A4 10 10 00 01 F3 EE EE"
+        "title": "\u4eba\u8138\u8bc6\u522b",
+        "value": "5A A5 09 A1 A5 10 10 00 03 12 00 0A EE EE"
     },
     "btn-data04": {
         "hex": 0,
@@ -27,18 +27,18 @@
     },
     "btn-data06": {
         "hex": 1,
-        "title": "F1\u91cd\u542f",
-        "value": "5A A5 07 FE A1 10 10 00 01 F1 EE EE\n"
+        "title": "\u5220\u9664\u4eba\u8138",
+        "value": "5A A5 09 A1 A5 10 10 00 03 20 00 01 EE EE"
     },
     "btn-data07": {
         "hex": 1,
-        "title": "\u5f00\u9501F3-0022",
-        "value": "5A A5 14 A2 A4 10 20 00 0E 12 0C 5A A5 07 00 16 10 10 04 01 03 FF EE FF EE"
+        "title": "\u83b7\u53d6\u72b6\u6001",
+        "value": "5A A5 07 A1 A5 10 10 00 01 11 EE EE"
     },
     "btn-data08": {
         "hex": 1,
-        "title": "R:2000+18",
-        "value": "5A A5 06 FE A1 03 20 00 18 EE EE"
+        "title": "\u5173\u6389\u7535\u6e90",
+        "value": "5A A5 07 A1 A5 10 10 00 01 F3 EE EE"
     },
     "btn-unpack01": {
         "title": "HEX print",
@@ -60,8 +60,8 @@
         "title": "tc01-sens-cfg",
         "value": "len(data)>=25 and data[2]==0x14 and '\\n\\K=%s\\nKuser=%s\\nad0fix=%s\\nmlevel=%s\\nfofactor=%s\\nKntc=%s\\n' % (\nuint16(data[9:]),\nuint16(data[11:]),\nuint16(data[13:]),\nuint16(data[15:]),\nuint16(data[17:]),\nuint16(data[19:]))\n\n"
     },
-    "cycle": "100",
+    "cycle": "1000",
     "encoding": "utf8",
-    "split": "50",
+    "split": "100",
     "uservar": "2,32200,0,0"
 }

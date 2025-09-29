@@ -209,13 +209,13 @@ class SerComm():
         if not self.isDetectSerialPort:
             self.isDetectSerialPort = True
             t = threading.Thread(target=self.detectSerialPortProcess)
-            t.setDaemon(True)
+            t.setDaemon = True
             t.start()
 
     def openCloseSerial(self):
         self.ui.log('Serial Port waitting...')
         t = threading.Thread(target=self.openCloseSerialProcess)
-        t.setDaemon(True)
+        t.setDaemon = True
         t.start()
 
     def receiveDataLoop(self):
@@ -294,13 +294,13 @@ class SerComm():
                     self.ui.log('%s: open success' % self.com.port)
                     self.comProgressStop = False
                     self.receiveProcess = threading.Thread(target=self.receiveDataLoop)
-                    self.receiveProcess.setDaemon(True)
+                    self.receiveProcess.setDaemon = True
                     self.receiveProcess.start()
                     self.sendProcess = threading.Thread(target=self.sendDataLoop)
-                    self.sendProcess.setDaemon(True)
+                    self.sendProcess.setDaemon = True
                     self.sendProcess.start()
                     self.sendProcess = threading.Thread(target=self.ui.getSendDataLoop)
-                    self.sendProcess.setDaemon(True)
+                    self.sendProcess.setDaemon = True
                     self.sendProcess.start()
                     # save usercfg
                     self.ui.save_cfg('entry-split')
