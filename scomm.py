@@ -6,10 +6,12 @@ import json
 import string
 import serial
 import serial.tools.list_ports
+
 import tkinter
+import tkgen.gengui
 import tkinter.scrolledtext
 import tkinter.filedialog
-import tkgen.gengui
+
 import threading
 import time
 import datetime
@@ -331,6 +333,7 @@ class SerialCommunicator:
         self.com = serial.Serial()
         self.threads = []
         self.running = threading.Event()
+        self.data_ready = threading.Event()  # 用于发送线程
         self.shutdown_event = threading.Event()
         
         # 统计信息
@@ -411,13 +414,14 @@ class SerialCommunicator:
         """启动通信线程"""
         self.running.set()
         self.shutdown_event.clear()
+        self.data_ready.clear()
         
         # 启动接收线程
         recv_thread = threading.Thread(target=self._receive_loop, daemon=True)
         recv_thread.start()
         self.threads.append(recv_thread)
         
-        # 启动发送线程（如果需要循环发送）
+        # 启动发送线程
         send_thread = threading.Thread(target=self._send_loop, daemon=True)
         send_thread.start()
         self.threads.append(send_thread)
@@ -426,6 +430,7 @@ class SerialCommunicator:
         """停止通信线程"""
         self.running.clear()
         self.shutdown_event.set()
+        self.data_ready.set()  # 唤醒发送线程
         
         # 等待线程结束
         for thread in self.threads[:]:
@@ -451,25 +456,37 @@ class SerialCommunicator:
                             self.ui.log(f'{self.com.port}: 接收 {len(buffer)} 字节')
                             buffer = b''
                 
-                time.sleep(0.01)  # 减少CPU占用
+                # 使用 Event.wait 代替 sleep，可以及时响应停止事件
+                self.running.wait(0.01)  # 等待10ms或直到running被清除
                 
             except Exception as e:
                 logger.error(f"接收数据错误: {e}")
-                time.sleep(0.1)
+                # 出错时等待100ms，但可以响应停止事件
+                self.running.wait(0.1)
     
     def _send_loop(self):
         """发送数据循环"""
         while self.running.is_set():
             try:
                 if self.com.is_open and self.ui.should_send_cycle():
-                    time.sleep(self.ui.get_cycle_interval())
-                    self._send_data()
+                    cycle_interval = self.ui.get_cycle_interval()
+
+                    # 使用 Event.wait 代替 sleep，可以及时响应停止事件
+                    # 等待指定的间隔时间，如果在此期间running被清除，则立即退出
+                    if not self.running.wait(cycle_interval):
+                        # 如果等待超时（返回False），说明running仍然设置，可以发送数据
+                        self._send_data()
+                    # 如果wait返回True，说明running被清除，循环条件会失败，退出循环
                 else:
-                    time.sleep(0.1)
+                    # 等待数据准备好或停止事件，最多等待100ms
+                    self.data_ready.wait(0.1)
+                    if self.data_ready.is_set():
+                        self._send_data()
+                        self.data_ready.clear()
                     
             except Exception as e:
                 logger.error(f"发送循环错误: {e}")
-                time.sleep(0.1)
+                self.running.wait(0.1)  # 出错时等待，但可以响应停止事件
     
     def send_data(self):
         """发送数据"""
@@ -477,9 +494,8 @@ class SerialCommunicator:
             self.ui.log('串口未打开')
             return
         
-        thread = threading.Thread(target=self._send_data, daemon=True)
-        thread.start()
-        self.threads.append(thread)
+        # 设置数据准备事件，唤醒发送线程
+        self.data_ready.set()
     
     def _send_data(self):
         """实际发送数据"""
@@ -522,6 +538,7 @@ class SerialCommunicator:
         # 停止所有线程
         self.running.clear()
         self.shutdown_event.set()
+        self.data_ready.set()  # 唤醒可能等待的发送线程
         
         # 关闭串口
         if self.com.is_open:
@@ -532,7 +549,7 @@ class SerialCommunicator:
                 logger.error(f"关闭串口时出错: {e}")
         
         # 等待一段时间让线程结束
-        time.sleep(0.5)
+        self.shutdown_event.wait(1.0)
         
         # 强制退出
         sys.exit(0)
@@ -681,10 +698,7 @@ class TopWindow:
 
 def main():
     """主函数"""
-    #try:
-    if True:
-        # 导入UI生成库
-        
+    try:
         # 创建主窗口
         tkinter.ScrolledText = tkinter.scrolledtext.ScrolledText
         root = tkgen.gengui.TkJson('app.ui', title='scomm串口调试助手')
@@ -725,8 +739,7 @@ def main():
         logger.info("应用程序启动完成")
         root.mainloop()
         
-    #except Exception as e:
-    else:
+    except Exception as e:
         logger.error(f"应用程序启动失败: {e}")
         sys.exit(1)
 
