@@ -173,8 +173,8 @@ class UIProcessor:
             self.ckbtn_shex.var.set(1 if hex_flag else 0)
 
         self.wait_send_data.update({
-            'rts': rts if rts is not None else self.wait_send_data['rts'],
-            'dtr': dtr if dtr is not None else self.wait_send_data['dtr']
+            'rts': rts,
+            'dtr': dtr
         })
 
     def get_send_data(self, cache: bool = True) -> Dict[str, Any]:
@@ -204,7 +204,6 @@ class UIProcessor:
         except Exception as e:
             logger.error(f"处理发送数据时出错: {e}")
             self.wait_send_data['text'] = b''
-
         return self.wait_send_data
 
     def dmesg(self, category: str, data: bytes):
@@ -530,6 +529,8 @@ class SerialCommunicator:
 
         # 设置数据准备事件，唤醒发送线程
         self.data_ready.set()
+        # 手动发送时不操作dtr/rts
+        self.ui.set_send_data(rts=None, dtr=None)
 
     def _send_data(self):
         """实际发送数据"""
