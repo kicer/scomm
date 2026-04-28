@@ -42,7 +42,7 @@ def tohex(data: bytes) -> str:
 
 def human_string(data: bytes, is_hex: bool = False, encoding: str = 'utf-8') -> str:
     """将字节数据转换为可读字符串"""
-    return tohex(data) if is_hex else data.decode(encoding, 'ignore')
+    return tohex(data) if is_hex else data.decode(encoding, 'backslashreplace')
 
 def uint16(b: bytes) -> int:
     """从字节读取无符号16位整数"""
@@ -487,7 +487,7 @@ class SerialCommunicator:
                     # 如果缓冲区有数据且超过分帧间隔，或者缓冲区数据量很大
                     if buffer and (time_since_last_data >= split_interval or len(buffer) > 1024):
                         self.ui.dmesg('recv', buffer)
-                        self.ui.log(f'{self.com.port}: 接收 {len(buffer)} 字节')
+                        self.ui.log(f'{self.com.port}: 接收 {len(buffer)} 字节: {tohex(buffer)}')
                         buffer = b''  # 清空缓冲区
 
                 # 使用 Event.wait 代替 sleep，可以及时响应停止事件
