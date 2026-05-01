@@ -42,7 +42,7 @@ def tohex(data: bytes) -> str:
 
 def human_string(data: bytes, is_hex: bool = False, encoding: str = 'utf-8') -> str:
     """将字节数据转换为可读字符串"""
-    return tohex(data) if is_hex else data.decode(encoding, 'backslashreplace')
+    return tohex(data) if is_hex else data.decode('utf-8', 'backslashreplace').replace('\x00', '\\x00')
 
 def uint16(b: bytes) -> int:
     """从字节读取无符号16位整数"""
